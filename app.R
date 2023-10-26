@@ -11,7 +11,7 @@ library(tidyverse)
 library(gt)
 
 
-setwd("C:\\Users\\willi\\OneDrive\\Skrivbord\\football_app")
+#setwd("C:\\Users\\willi\\OneDrive\\Skrivbord\\football_app")
 
 
 
@@ -26,52 +26,69 @@ ui <- fluidPage(theme = shinytheme("cosmo"),
            selectInput("pl_select", "Select Match", choices = NULL),
            gt_output("pl_teams_stats"),
            gt_output("pl_teams_odds")),
-         # DTOutput('tbl')),
+          
           tabPanel("League Table",
            DTOutput("pl_table")))
       )
     ),
     tabPanel("Serie A",
-             mainPanel(
-               selectInput("serie_a_select", "Select Match", choices = NULL),
-               DTOutput("serie_a_table"))
+       mainPanel(
+         tabsetPanel(
+           tabPanel("Matchup",
+                    selectInput("serie_a_select", "Select Match", choices = NULL),
+                    gt_output("serie_a_teams_stats"),
+                    gt_output("serie_a_teams_odds")),
+           
+           tabPanel("League Table",
+                    DTOutput("serie_a_table")))
+       )
     ),
     tabPanel("La Liga",
              mainPanel(
-               selectInput("la_liga_select", "Select Match", choices = NULL),
-               DTOutput("la_liga_table"))
+               tabsetPanel(
+                 tabPanel("Matchup",
+                          selectInput("la_liga_select", "Select Match", choices = NULL),
+                          gt_output("la_liga_teams_stats"),
+                          gt_output("la_liga_teams_odds")),
+                 
+                 tabPanel("League Table",
+                          DTOutput("la_liga_table")))
+             )
     ),
     tabPanel("Bundesliga",
              mainPanel(
-               selectInput("bundesliga_select", "Select Match", choices = NULL),
-               DTOutput("bundesliga_table"))
+               tabsetPanel(
+                 tabPanel("Matchup",
+                          selectInput("bundesliga_select", "Select Match", choices = NULL),
+                          gt_output("bundesliga_teams_stats"),
+                          gt_output("bundesliga_teams_odds")),
+                 
+                 tabPanel("League Table",
+                          DTOutput("bundesliga_table")))
+             )
     ),
     tabPanel("Ligue 1",
              mainPanel(
-               selectInput("ligue_1_select", "Select Match", choices = NULL),
-               DTOutput("ligue_1_table"))
+               tabsetPanel(
+                 tabPanel("Matchup",
+                          selectInput("ligue_1_select", "Select Match", choices = NULL),
+                          gt_output("ligue_1_teams_stats"),
+                          gt_output("ligue_1_teams_odds")),
+                 
+                 tabPanel("League Table",
+                          DTOutput("ligue_1_table")))
+             )
     )
   )
   
-        # tabPanel("Serie A",
-        #          selectInput("serie_a_select", "Select Serie A Matches", choices = NULL),
-        #          DTOutput("serie_a_table")),
-        # tabPanel("La Liga",
-        #          selectInput("la_liga_select", "Select La Liga Matches", choices = NULL),
-        #          DTOutput("la_liga_table")),
-        # tabPanel("Bundesliga",
-        #          selectInput("bundesliga_select", "Select Bundesliga Matches", choices = NULL),
-        #          DTOutput("bundesliga_table")),
-        # tabPanel("Ligue 1",
-        #          selectInput("ligue_1_select", "Select Ligue 1 Matches", choices = NULL),
-        #          DTOutput("ligue_1_table"))
-
 )
 
 server <- function(input, output, session) {
   
   
-  source("worldfootball.R", local = TRUE)
+  source("worldfootball.R", local = TRUE) # Functions
+  source("gt_tabels.R", local = TRUE) # GT functions
+  
   res <- load_match_results(country = c("ENG","ITA","ESP","GER","FRA"),
                             gender ="M",
                             season_end_year = 2024,
@@ -79,13 +96,6 @@ server <- function(input, output, session) {
   
   
   league_table <- get_league_table(res)
-  
-  
-  headerCallbackRemoveHeaderFooter <- c(
-    "function(thead, data, start, end, display){",
-    "  $('th', thead).css('display', 'none');",
-    "}"
-  )
   
   
   # ============================================================================
@@ -101,7 +111,6 @@ server <- function(input, output, session) {
     group_by(Competition_Name) %>%
     slice(1:10) %>%
     ungroup()
-  
   
   
   observe({
@@ -130,60 +139,57 @@ server <- function(input, output, session) {
   # ============================================================================
   # ============================================================================
   
-    
-    columns <- c("Date", "Home", "HomeGoals", "Home_xG", "Away", "AwayGoals", "Away_xG")
-  
-  
-  
-    
+
     # Filter the desired columns for Premier League
     pl_league <- cbind(1:20,league_table[league_table$Competition_Name == "Premier League",-1 ])
 
     output$pl_table <- renderDT({
       datatable(pl_league,
                  options = list(
-                    #dom = "t",
                     ordering = FALSE,
                     paging = FALSE,
-                   # columnDefs = list(list(width = '50px', targets = "_all")),
                     autoWidth = FALSE,  # Allow automatic width
                     initComplete = JS('function(settings, json) {$(this.api().table().node()).css("width", "50%");}'),
                     searching = FALSE
-                    #headerCallback = JS(headerCallbackRemoveHeaderFooter)
                      ),
                   selection = 'none',
-                  callback = JS(
-                    "$('table.dataTable.no-footer').css('border-bottom', 'none');"
-                      ),
                   class = 'cell-border stripe',
                   escape = FALSE,
                   rownames = FALSE,
                   filter = "none",
                   width = 50
                )
-     
-      
     })
     
-   
+    # ==========================================================================
+    # ============================ 45 SEC WAIT =================================
+    # ==========================================================================
+    
     # Cards, Offsides, Fouls
-    pl_misc <- fb_season_team_stats("ENG","M",2024,"1st","misc")
-    pl_misc <- pl_misc %>%  mutate("Cards" = ((CrdY + (CrdR*2)) / Mins_Per_90),
+    misc <- fb_season_team_stats(c("ENG","ITA","ESP","GER","FRA"),
+                                    "M",2024,"1st","misc", time_pause = 3)
+    misc <- misc %>%  mutate("Cards" = ((CrdY + (CrdR*2)) / Mins_Per_90),
                                    "Offside" = (Off / Mins_Per_90),
                                    "Fouls" = (Fls / Mins_Per_90))
     
     # Shots, sot
-    pl_shots <- fb_season_team_stats("ENG","M",2024,"1st","shooting")
-    pl_shots <- pl_shots %>%  mutate("Shots" = ((Sh_Standard) / Mins_Per_90),
+    shots <- fb_season_team_stats(c("ENG","ITA","ESP","GER","FRA"),
+                                     "M",2024,"1st","shooting", time_pause = 3)
+    shots <- shots %>%  mutate("Shots" = ((Sh_Standard) / Mins_Per_90),
                                      "ShotsOnTarget" = (SoT_Standard / Mins_Per_90))
     
     
     # Tackles
-    pl_tackles <- fb_season_team_stats("ENG","M",2024,"1st","defense")
-    pl_tackles <- pl_tackles %>%  mutate("Tackles" = ((Tkl_Tackles) / Mins_Per_90))
+    tackles <- fb_season_team_stats(c("ENG","ITA","ESP","GER","FRA"),
+                                       "M",2024,"1st","defense", time_pause = 3)
+    tackles <- tackles %>%  mutate("Tackles" = ((Tkl_Tackles) / Mins_Per_90))
                                     
+    # ==========================================================================
+    # ============================ 45 SEC WAIT =================================
+    # ==========================================================================
                                   
     
+    # Empty matrix for teams stats
     mat <- matrix(NA, 6, 6) %>% 
       as.data.frame() %>% 
       `colnames<-`(c("Stats","HomeTeam_For", "HomeTeam_Against",
@@ -192,138 +198,117 @@ server <- function(input, output, session) {
     mat$Stats <- c("Cards", "Offside", "Fouls", "Shots", "ShotsOnTarget", "Tackles")
     
   
+    team_stats <- function(league) {
+      teams <- c()
+      teams_ex <- strsplit(input[[paste0(league, "_select")]], " vs ")[[1]]
+      print(paste0(league, "_select"))
+    
+  
+      # Extract home team and away team, removing the date part for the home team
+      teams[1] <- gsub("^[0-9-]+\\s", "", teams_ex[1])
+      teams[2] <- teams_ex[2]
+      
+      # Get the data
+      stats_team_mat <- get_team_stats(teams, misc, shots, tackles, mat)
+      
+      return(list(teams = teams, stats = stats_team_mat))
+    }
+    
+    team_stats_pl <- reactive({ team_stats("pl") })
+    team_stats_serie_a <- reactive({ team_stats("serie_a") })
+    team_stats_la_liga <- reactive({ team_stats("la_liga") })
+    team_stats_bundesliga <- reactive({ team_stats("bundesliga") })
+    team_stats_ligue_1 <- reactive({ team_stats("ligue_1") })
+    
+    
+
+    
+    
+    generate_team_stats_output <- function(league, odds = FALSE) {
+      data <- switch(league,
+                     "pl" = team_stats_pl(),
+                     "serie_a" = team_stats_serie_a(),
+                     "la_liga" = team_stats_la_liga(),
+                     "bundesliga" = team_stats_bundesliga(),
+                     "ligue_1" = team_stats_ligue_1()
+      )
+      teams <- data$teams
+      stats_team_mat <- data$stats
+      
+      if (odds) {
+        rownames(stats_team_mat) <- stats_team_mat[, 1]
+        mat_m <- stats_team_mat[, -1]
+        df_team_odds <- get_team_odds(mat_m, num_stats = 6)
+        return(get_gt_odds_team(df_team_odds, teams[1], teams[2]))
+      } else {
+        stats_team_mat[, -1] <- round(stats_team_mat[, -1], 1)
+        return(get_gt_teams(stats_team_mat, teams[1], teams[2]))
+      }
+    }
+    
+    
+    
     
     output$pl_teams_stats <- render_gt({
-      
-      teams <- c()
-      teams_ex <- strsplit(input$pl_select, " vs ")[[1]]
-      
-      # Extract home team and away team, removing the date part for the home team
-      teams[1] <- gsub("^[0-9-]+\\s", "", teams_ex[1])
-      teams[2] <- teams_ex[2]
-  
-      get_team_stats <- function(team, pl_misc, pl_shots, pl_tackles) {
-        pl_misc %>%
-          filter(Squad %in% c(team, str_c("vs ", team))) %>%
-          select(Team_or_Opponent, Cards, Offside, Fouls) %>%
-          full_join(
-            pl_shots %>%
-              filter(Squad %in% c(team, str_c("vs ", team))) %>%
-              select(Team_or_Opponent, Shots, ShotsOnTarget),
-            by = 'Team_or_Opponent'
-          ) %>%
-          full_join(
-            pl_tackles %>%
-              filter(Squad %in% c(team, str_c("vs ", team))) %>%
-              select(Team_or_Opponent, Tackles),
-            by = 'Team_or_Opponent'
-          )
-      }
-      
-      teams_stats <- lapply(teams, get_team_stats, pl_misc, pl_shots, pl_tackles) 
-     
-      mat$HomeTeam_For <- teams_stats[[1]][1,-1] %>% unlist()
-      mat$HomeTeam_Against <- teams_stats[[1]][2,-1]  %>% unlist()
-      mat$AwayTeam_For <- teams_stats[[2]][1,-1]  %>% unlist()
-      mat$AwayTeam_Against <- teams_stats[[2]][2,-1]  %>% unlist()
-      mat$Total <- (mat$HomeTeam_For + mat$AwayTeam_Against) / 2 + 
-                   (mat$AwayTeam_For + mat$HomeTeam_Against) / 2
-      
-      mat[,-1] <- round(mat[,-1], 1)
-      
-     
-      
-      tab_options(get_gt_teams(mat,teams[1],teams[2]),
+      tab_options(generate_team_stats_output("pl"),
                   table.width = "500px",
                   table.font.size = 14,
-                   column_labels.font.weight = "bold"
-  
-                  
-      )
-      
+                  column_labels.font.weight = "bold")
+    })
     
-      
+    output$serie_a_teams_stats <- render_gt({
+      tab_options(generate_team_stats_output("serie_a"),
+                  table.width = "500px",
+                  table.font.size = 14,
+                  column_labels.font.weight = "bold")
+    })
+    
+    output$la_liga_teams_stats <- render_gt({
+      tab_options(generate_team_stats_output("la_liga"),
+                  table.width = "500px",
+                  table.font.size = 14,
+                  column_labels.font.weight = "bold")
+    })
+    
+    output$bundesliga_teams_stats <- render_gt({
+      tab_options(generate_team_stats_output("bundesliga"),
+                  table.width = "500px",
+                  table.font.size = 14,
+                  column_labels.font.weight = "bold")
+    })
+    
+    output$ligue_1_teams_stats <- render_gt({
+      tab_options(generate_team_stats_output("ligue_1"),
+                  table.width = "500px",
+                  table.font.size = 14,
+                  column_labels.font.weight = "bold")
     })
     
     
+    
+    # ============================= ODDS GT ====================================
     output$pl_teams_odds <- render_gt({
-      
-      teams <- c()
-      teams_ex <- strsplit(input$pl_select, " vs ")[[1]]
-      
-      # Extract home team and away team, removing the date part for the home team
-      teams[1] <- gsub("^[0-9-]+\\s", "", teams_ex[1])
-      teams[2] <- teams_ex[2]
-      
-      get_team_stats <- function(team, pl_misc, pl_shots, pl_tackles) {
-        pl_misc %>%
-          filter(Squad %in% c(team, str_c("vs ", team))) %>%
-          select(Team_or_Opponent, Cards, Offside, Fouls) %>%
-          full_join(
-            pl_shots %>%
-              filter(Squad %in% c(team, str_c("vs ", team))) %>%
-              select(Team_or_Opponent, Shots, ShotsOnTarget),
-            by = 'Team_or_Opponent'
-          ) %>%
-          full_join(
-            pl_tackles %>%
-              filter(Squad %in% c(team, str_c("vs ", team))) %>%
-              select(Team_or_Opponent, Tackles),
-            by = 'Team_or_Opponent'
-          )
-      }
-      
-      teams_stats <- lapply(teams, get_team_stats, pl_misc, pl_shots, pl_tackles) 
-      
-      mat$HomeTeam_For <- teams_stats[[1]][1,-1] %>% unlist()
-      mat$HomeTeam_Against <- teams_stats[[1]][2,-1]  %>% unlist()
-      mat$AwayTeam_For <- teams_stats[[2]][1,-1]  %>% unlist()
-      mat$AwayTeam_Against <- teams_stats[[2]][2,-1]  %>% unlist()
-      mat$Total <- (mat$HomeTeam_For + mat$AwayTeam_Against) / 2 + 
-        (mat$AwayTeam_For + mat$HomeTeam_Against) / 2
-      
-     # mat[,-1] <- round(mat[,-1], 1)
-      rownames(mat) <- mat[,1]
-      mat_m <- mat[,-1]
-      num_stats <- 6
-      resultat <- unlist(apply(cbind(((mat_m[,1]+ mat_m[,4])/ 2),
-                                     ((mat_m[,2]+ mat_m[,3])/ 2),
-                                     mat_m[,5]), 1:2, calculate_betting_odds))
-      
-      dff <- NULL
-      for (i in seq(1, length(resultat), 9)) {
-        matris <- matrix(resultat[i:(i+8)], nrow = 3)
-        if (is.null(dff)) {
-          dff <- as.data.frame(matris)
-        } else {
-          dff <- rbind(dff, as.data.frame(matris))
-        }
-      }
-      df_delat_m <- NULL
-      for (i in seq(1, nrow(dff), num_stats*3)) {
-        subset_df <- dff[i:(i+(num_stats*3)-1), ]
-        if (is.null(df_delat_m)) {
-          df_delat_m <- subset_df
-        } else {
-          df_delat_m <- cbind(df_delat_m, subset_df)
-        }
-      }
-      
-      df_complete <- cbind(rep(rownames(mat_m), each = 3),df_delat_m)
-      
-      
-      
-      
-      tab_options(get_gt_odds_team(df_complete,teams[1],teams[2]),
-                  table.width = "500px",
-                  table.font.size = 14,
-                  column_labels.font.weight = "bold"
-                  
-                  
-      )
-      
-      
+      tab_options(generate_team_stats_output("pl", odds = TRUE), table.width = "500px", table.font.size = 14, column_labels.font.weight = "bold")
     })
+    
+    output$serie_a_teams_odds <- render_gt({
+      tab_options(generate_team_stats_output("serie_a", odds = TRUE), table.width = "500px", table.font.size = 14, column_labels.font.weight = "bold")
+    })
+    
+    output$la_liga_teams_odds <- render_gt({
+      tab_options(generate_team_stats_output("la_liga", odds = TRUE), table.width = "500px", table.font.size = 14, column_labels.font.weight = "bold")
+    })
+    
+    output$bundesliga_teams_odds <- render_gt({
+      tab_options(generate_team_stats_output("bundesliga", odds = TRUE), table.width = "500px", table.font.size = 14, column_labels.font.weight = "bold")
+    })
+    
+    output$ligue_1_teams_odds <- render_gt({
+      tab_options(generate_team_stats_output("ligue_1", odds = TRUE), table.width = "500px", table.font.size = 14, column_labels.font.weight = "bold")
+    })
+    
+    # ============================= ODDS GT ====================================
+    
    
 
 }
@@ -333,8 +318,7 @@ shinyApp(ui = ui, server = server)
 
 
 
-
-
+#hej <- fb_season_team_stats(c("ENG","ITA","ESP","GER","FRA"),"M",2024,"1st","misc", time_pause = 3)
 
 
 
