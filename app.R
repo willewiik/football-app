@@ -248,67 +248,68 @@ server <- function(input, output, session) {
     
     
     
+    # ==========================================================================
+    # ========================== Team Stats GT =================================
     
     output$pl_teams_stats <- render_gt({
-      tab_options(generate_team_stats_output("pl"),
-                  table.width = "500px",
-                  table.font.size = 14,
-                  column_labels.font.weight = "bold")
+      tab_options(generate_team_stats_output("pl"), table.width = "500px",
+                  table.font.size = 14, column_labels.font.weight = "bold")
     })
     
     output$serie_a_teams_stats <- render_gt({
-      tab_options(generate_team_stats_output("serie_a"),
-                  table.width = "500px",
-                  table.font.size = 14,
-                  column_labels.font.weight = "bold")
+      tab_options(generate_team_stats_output("serie_a"), table.width = "500px",
+                  table.font.size = 14, column_labels.font.weight = "bold")
     })
     
     output$la_liga_teams_stats <- render_gt({
-      tab_options(generate_team_stats_output("la_liga"),
-                  table.width = "500px",
-                  table.font.size = 14,
-                  column_labels.font.weight = "bold")
+      tab_options(generate_team_stats_output("la_liga"), table.width = "500px",
+                  table.font.size = 14, column_labels.font.weight = "bold")
     })
     
     output$bundesliga_teams_stats <- render_gt({
-      tab_options(generate_team_stats_output("bundesliga"),
-                  table.width = "500px",
-                  table.font.size = 14,
-                  column_labels.font.weight = "bold")
+      tab_options(generate_team_stats_output("bundesliga"), table.width = "500px",
+                  table.font.size = 14, column_labels.font.weight = "bold")
     })
     
     output$ligue_1_teams_stats <- render_gt({
-      tab_options(generate_team_stats_output("ligue_1"),
-                  table.width = "500px",
-                  table.font.size = 14,
-                  column_labels.font.weight = "bold")
+      tab_options(generate_team_stats_output("ligue_1"), table.width = "500px",
+                  table.font.size = 14, column_labels.font.weight = "bold")
     })
     
+    # ========================== Team Stats GT =================================
+    # ==========================================================================
     
     
+    # ==========================================================================
     # ============================= ODDS GT ====================================
+    
     output$pl_teams_odds <- render_gt({
-      tab_options(generate_team_stats_output("pl", odds = TRUE), table.width = "500px", table.font.size = 14, column_labels.font.weight = "bold")
+      tab_options(generate_team_stats_output("pl", odds = TRUE), table.width = "500px",
+                  table.font.size = 14, column_labels.font.weight = "bold")
     })
     
     output$serie_a_teams_odds <- render_gt({
-      tab_options(generate_team_stats_output("serie_a", odds = TRUE), table.width = "500px", table.font.size = 14, column_labels.font.weight = "bold")
+      tab_options(generate_team_stats_output("serie_a", odds = TRUE), table.width = "500px",
+                  table.font.size = 14, column_labels.font.weight = "bold")
     })
     
     output$la_liga_teams_odds <- render_gt({
-      tab_options(generate_team_stats_output("la_liga", odds = TRUE), table.width = "500px", table.font.size = 14, column_labels.font.weight = "bold")
+      tab_options(generate_team_stats_output("la_liga", odds = TRUE), table.width = "500px",
+                  table.font.size = 14, column_labels.font.weight = "bold")
     })
     
     output$bundesliga_teams_odds <- render_gt({
-      tab_options(generate_team_stats_output("bundesliga", odds = TRUE), table.width = "500px", table.font.size = 14, column_labels.font.weight = "bold")
+      tab_options(generate_team_stats_output("bundesliga", odds = TRUE), table.width = "500px",
+                  table.font.size = 14, column_labels.font.weight = "bold")
     })
     
     output$ligue_1_teams_odds <- render_gt({
-      tab_options(generate_team_stats_output("ligue_1", odds = TRUE), table.width = "500px", table.font.size = 14, column_labels.font.weight = "bold")
+      tab_options(generate_team_stats_output("ligue_1", odds = TRUE), table.width = "500px",
+                  table.font.size = 14, column_labels.font.weight = "bold")
     })
     
     # ============================= ODDS GT ====================================
-    
+    # ==========================================================================
    
 
 }
