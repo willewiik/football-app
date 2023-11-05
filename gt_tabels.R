@@ -24,7 +24,7 @@ get_gt_teams <- function(mat, home, away){
     gt_result <- gt(mat, rowname_col = "Stats") %>% 
       cols_label(.list = desired_colnames) %>% 
       tab_header(
-      title = paste("Statistics for", home, "-", away, "& total (per match)")
+      title = paste("Statistics for", home, "-", away, "& total")
        )  %>%
         tab_spanner(
           label = md(str_c("**",home,"**")),
@@ -142,6 +142,53 @@ get_gt_odds_team <- function(mat, home, away){
   
 }
 
+
+
+
+get_gt_odds_players <- function(mat){
+  
+  player <- mat[1]
+  stats <- mat[5:9]
+  resultat <- lapply(stats,calculate_betting_odds)
+  resultat <- do.call("rbind",resultat ) 
+  resultat <- resultat[-c(13,15),]
+  resultat$Action <- c(rep("Shots",3), rep("Sot",3), rep("Tackles",3 ), rep("Passes", 3),"Card")
+  resultat <- resultat %>% relocate("Action")
+
+  
+  gt_result <- gt(resultat) %>% 
+    tab_header(
+      title = paste("Odds for", player)
+    )  %>%
+    tab_style(
+      style = list(
+        cell_fill(color = "#FC766AFF", alpha = 0.8)
+      ),
+      locations = cells_body(
+        rows = c(1:3, 7:9, 13),
+      )
+    ) %>% 
+    tab_style(
+      style = list(
+        cell_fill(color = "#5B84B1FF", alpha = 0.1)
+      ),
+      locations = cells_body(
+        rows = c(4:6, 10:12),
+      )
+    ) %>% 
+    tab_style(
+      style = list(
+        cell_text(weight = "bold")
+      ),
+      locations = cells_body(
+        columns = c(1,2),
+      )
+    ) %>% 
+    opt_stylize(style = 1, color = 'gray')
+  gt_result  
+  
+  
+}
   
 
 
@@ -151,6 +198,10 @@ get_gt_odds_team <- function(mat, home, away){
 #                  "AwayTeam_For", "AwayTeam_Against", "Total"))
 # 
 # mat$Stats <- c("Cards", "Offside", "Fouls", "Shots", "ShotsOnTarget", "Tackles")
+
+
+
+
 
 
 
