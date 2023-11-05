@@ -9,7 +9,7 @@ library(dbplyr)
 
 
 # ==============================================================================
-stats <- readRDS(file = "stats_list_2023.rds") 
+stats <- readRDS(file = "rds_files/stats_list_2023.rds") 
 
 cutoff <- c()
 for(pp in 1:5) {

@@ -174,11 +174,11 @@ get_team_formation <- function(vec) {
 
 
 
-id_players_2023 <- readRDS("id_players_2023.rds")
+id_players_2023 <- readRDS("rds_files/id_players_2023.rds")
 id_players_2023 <- unique(id_players_2023)
-id_matches_2023 <- readRDS("id_matches_2023.rds") 
-odds_2023 <- readRDS("odds_matches_2023.rds") 
-id_teams_2023 <- readRDS("id_teams_2023.rds") 
+id_matches_2023 <- readRDS("rds_files/id_matches_2023.rds") 
+odds_2023 <- readRDS("rds_files/odds_matches_2023.rds") 
+id_teams_2023 <- readRDS("rds_files/id_teams_2023.rds") 
 
 match_id <- id_matches_2023$match_id_fbref
 
@@ -489,7 +489,7 @@ for(ii in 1:5){
 
 
 
-saveRDS(stats_list, file = "stats_list_2023.rds")
+saveRDS(stats_list, file = "rds_files/stats_list_2023.rds")
 
 
 

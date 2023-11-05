@@ -230,7 +230,7 @@ colnames(merged_matches) <- c(colnames(merged_matches)[1:3],
 # matches_fbref[!(matches_fbref$match_id %in% merged_matches$match_id.x), ]
 # matches_understat[!(matches_understat$match_id %in% merged_matches$match_id.y), ]
 
-#saveRDS(merged_matches, file = "id_matches_2023.rds")
+#saveRDS(merged_matches, file = "rds_files/id_matches_2023.rds")
 
 
 
@@ -271,7 +271,7 @@ matches_footballData <- merge(matches_fbref, matches_footballData,
                                by = c("home_team", "away_team")) 
 
 
-# saveRDS(matches_footballData, file = "odds_matches_2024.rds")
+# saveRDS(matches_footballData, file = "rds_files/odds_matches_2024.rds")
 
 
 # ==============================================================================
@@ -312,7 +312,7 @@ rows <- c(380, 380, 380, 306, 306)
 league_data <- lapply(1:length(urls), function(i) get_team_id(urls[i], rows[i]))
 team_id <- do.call(rbind, league_data)
 team_id$hteam <- rename_teams(team_id$hteam, from = "fbref", to = "fbref_full")
-#saveRDS(team_id, file = "id_teams_2023.rds")
+#saveRDS(team_id, file = "rds_files/id_teams_2023.rds")
 
 # ==============================================================================
 # ID PLAYERS ===================================================================
@@ -463,8 +463,8 @@ merge_dataframes <- function(df1, df2, min_name = 3) {
 # //////////////////////////////////////////////////////////////////////////////
 {
   
-  id_teams_2023 <- readRDS("id_teams_2023.rds")
-  id_players_old <- readRDS("id_players_2023.rds")
+  id_teams_2023 <- readRDS("rds_files/id_teams_2023.rds")
+  id_players_old <- readRDS("rds_files/id_players_2023.rds")
   
   
  # unique_teams <- id_teams_2023[c(1,4,20,21,24,39,44,57,58,72,75,88,93),]
@@ -566,10 +566,10 @@ merge_dataframes <- function(df1, df2, min_name = 3) {
   
   #id_players <- rbind(id_players,manuell_players)
   
-  old <- readRDS(file="id_players_2023.rds")
+  old <- readRDS(file="rds_files/id_players_2023.rds")
   id_players <- rbind(id_players, old)
   
-  #saveRDS(id_players, file = "id_players_2023.rds")
+  #saveRDS(id_players, file = "rds_files/id_players_2023.rds")
   
 }
 

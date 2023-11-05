@@ -281,7 +281,7 @@ server <- function(input, output, session) {
 
   con <- dbConnect(MySQL(), host = dbHost, port = dbPort, dbname = dbName, user = dbUser, password = dbPassword)
   
-  id_teams_2023 <- readRDS("id_teams_2023.rds")
+  id_teams_2023 <- readRDS("rds_files/id_teams_2023.rds")
   id_teams_2023$hteam <- rename_teams(id_teams_2023$hteam, from = "fbref_full", to = "fbref")
   
   
