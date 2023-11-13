@@ -16,17 +16,12 @@ library(RSQLite)
 library(dbplyr)
 
 
-
+html_content <- readLines("match.html", warn = FALSE)
 
 ui <- fluidPage(theme = shinytheme("sandstone"),
                 titlePanel("Football Leagues App signed by willewiik"),
                 
-                tags$head(
-                  tags$style(
-                    HTML(".dataTables_wrapper { width: 150%; }")
-                  )
-                ),
-                
+               includeCSS("style.css"),
                 navbarPage("Home",
                            tabPanel("Premier League",
                                     mainPanel(
@@ -34,7 +29,9 @@ ui <- fluidPage(theme = shinytheme("sandstone"),
                                         tabPanel("Matchup",
                                                  selectInput("pl_select", "Select Match", choices = NULL),
                                                  gt_output("pl_teams_stats"),
-                                                 gt_output("pl_teams_odds")),
+                                                 gt_output("pl_teams_odds"),
+                                                 includeHTML("match.html")),
+                                               
                                         
                                         tabPanel("League Table",
                                                  DTOutput("pl_table")),

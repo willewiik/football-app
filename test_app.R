@@ -13,20 +13,13 @@ library(shinyalert)
 
 
 
+
+
+html_content <- readLines("match.html", warn = FALSE)
+
 ui <- fluidPage(theme = shinytheme("cosmo"),
                 titlePanel("Football Leagues App signed by willewiik"),
-                
-                tags$head(
-                  tags$style(HTML("
-                      .dataTables_wrapper {
-                        width: 150%;
-                      }
-                      .bold-and-big-text {
-                        font-weight: bold;
-                        font-size: 100px;
-                      }
-                    "))
-                ),
+                includeCSS("style.css"),
                 
                 navbarPage("Home",
                            tabPanel("Premier League",
@@ -35,7 +28,8 @@ ui <- fluidPage(theme = shinytheme("cosmo"),
                                         tabPanel("Matchup",
                                                  selectInput("pl_select", "Select Match", choices = NULL),
                                                  gt_output("pl_teams_stats"),
-                                                 gt_output("pl_teams_odds")),
+                                                 gt_output("pl_teams_odds"),
+                                                 includeHTML("match.html")),
                                         
                                         tabPanel("League Table",
                                                  DTOutput("pl_table")),
@@ -53,7 +47,7 @@ ui <- fluidPage(theme = shinytheme("cosmo"),
                                                                label = "Ungroup on position",
                                                                value = FALSE),
                                                  DTOutput("pl_home_player"),
-                                                 textOutput("pl_home_player_name", class = "bold-and-big-text"),
+                                                 textOutput("pl_home_player_name"),
                                                  DTOutput("pl_home_player_per_match"),
                                                  gt_output("pl_home_player_odds")),
                                         
@@ -317,11 +311,11 @@ server <- function(input, output, session) {
   dbPort <- 3306  # Portnummer
   dbName <- "sql_workbench"
   dbUser <- "root"
-  dbPassword <- "&2;6DcH+O{jnVct"
+  dbPassword <- Sys.getenv("Key1")
   
   # Skapa anslutningssträng
   con <- dbConnect(MySQL(), host = dbHost, port = dbPort, dbname = dbName, user = dbUser, password = dbPassword)
-  id_teams_2023 <- readRDS("rds_files/d_teams_2023.rds")
+  id_teams_2023 <- readRDS("rds_files/id_teams_2023.rds")
   id_teams_2023$hteam <- rename_teams(id_teams_2023$hteam, from = "fbref_full", to = "fbref")
   
   
@@ -589,6 +583,11 @@ server <- function(input, output, session) {
   
   # ============================= ODDS GT ====================================
   # ==========================================================================
+  
+  onStop(function() {
+    dbDisconnect(con)
+  })
+  
   
   
 }

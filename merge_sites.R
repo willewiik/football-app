@@ -126,6 +126,36 @@ rename_teams <- function(teams,from = "understat", to = "fbref") {
   
   
   
+  
+  # KAMBI
+  KAMBI_name <- c("Manchester City", "Arsenal", "Newcastle", "Manchester United", "Liverpool",
+                         "Brighton","Tottenham","Aston Villa", "Brentford","Fulham","Chelsea","Crystal Palace",
+                         "Wolves","Bournemouth","West Ham", "Nottingham Forest", "Everton","Leeds",
+                         "Leicester", "Southampton",
+                         "Burnley","Luton Town", "Sheffield United",
+                         
+                         "Sampdoria","AC Milan","Monza","Lecce","Fiorentina","Lazio","Spezia" ,      
+                         "Salernitana","Hellas Verona","Juventus","Torino","Udinese","Inter","Sassuolo",     #SERIE A
+                         "Empoli","Napoli","Bologna","Atalanta","Roma","Cremonese",
+                         "Frosinone", "Genoa", "Cagliari",
+                         
+                         "Osasuna","Celta Vigo","Valladolid", "FC Barcelona","Cadiz", "Valencia", "Almeria",    
+                         "Athletic Bilbao", "Getafe", "Real Betis", "Espanyol", "Sevilla", "Mallorca", "Atlético Madrid", #LA LIGA
+                         "Real Sociedad", "Elche", "Girona", "Rayo Vallecano", "Real Madrid","Villarreal",
+                         "Granada", "UD Las Palmas", "Alavés",
+                         
+                         "Lyon","Strasbourg","Clermont", "Toulouse", "Lens", "Angers" ,"Lille",      
+                         "Montpellier", "Rennes", "Marseille", "Nantes", "AS Monaco","Paris SG","Ajaccio" ,  # Ligue 1
+                         "Reims", "Auxerre","Troyes","Nice","Brest","Lorient",
+                         "Metz", "Le Havre",
+                         
+                         "Eintracht Frankfurt", "VfL Wolfsburg", "FC Augsburg", "1. FC Union Berlin", "Borussia Mönchengladbach", "VfL Bochum", "Borussia Dortmund",  
+                         "VfB Stuttgart", "1. FC Köln", "SC Freiburg", "TSG Hoffenheim", "Werder Bremen", "Bayer Leverkusen", "RB Leipzig",  # Bundes
+                         "Hertha Berlin", "Schalke 04", "Mainz 05", "Bayern Munich",
+                         "Darmstadt 98", "1. FC Heidenheim")
+  
+  
+  
   if (from == "understat" & to == "fbref") {
     
     new_teams <- lapply(teams, function(team) fbref_name[which(team == understat_name)]) %>% unlist()
@@ -230,7 +260,12 @@ colnames(merged_matches) <- c(colnames(merged_matches)[1:3],
 # matches_fbref[!(matches_fbref$match_id %in% merged_matches$match_id.x), ]
 # matches_understat[!(matches_understat$match_id %in% merged_matches$match_id.y), ]
 
-#saveRDS(merged_matches, file = "rds_files/id_matches_2023.rds")
+
+old_matches <- readRDS(file = "rds_files/id_matches_2023.rds")
+new_matches <- merged_matches[!(merged_matches$match_id_fbref %in%  old_matches$match_id_fbref),]
+combined_matches <- rbind(old_matches,new_matches)
+
+saveRDS(combined_matches, file = "rds_files/id_matches_2023.rds")
 
 
 
@@ -271,7 +306,12 @@ matches_footballData <- merge(matches_fbref, matches_footballData,
                                by = c("home_team", "away_team")) 
 
 
-# saveRDS(matches_footballData, file = "rds_files/odds_matches_2024.rds")
+
+old_odds <- readRDS(file = "rds_files/odds_matches_2023.rds")
+new_odds <- matches_footballData[!(matches_footballData$match_id %in%  old_odds$match_id),]
+combined_odds <- rbind(old_odds,new_odds)
+
+saveRDS(combined_odds, file = "rds_files/odds_matches_2023.rds")
 
 
 # ==============================================================================
@@ -280,38 +320,40 @@ matches_footballData <- merge(matches_fbref, matches_footballData,
 
 
 
-library(rvest)
+# library(rvest)
+# 
+# get_team_id <- function(url, rows) {
+#   hteam <- url %>%
+#     read_html() %>%
+#     html_nodes(".right a") %>%
+#     html_text() %>%
+#     unique()
+#   
+#   teamid <- url %>%
+#     read_html() %>%
+#     html_nodes(".right a") %>%
+#     html_attr("href") %>%
+#     stringr::str_sub(12, 19) %>%
+#     unique()
+#   
+#   return(data.frame(hteam, teamid))
+# }
+# 
+# urls <- c(
+#   "https://fbref.com/en/comps/9/schedule/Premier-League-Scores-and-Fixtures",
+#   "https://fbref.com/en/comps/11/schedule/Serie-A-Scores-and-Fixtures",
+#   "https://fbref.com/en/comps/12/schedule/La-Liga-Scores-and-Fixtures",
+#   "https://fbref.com/en/comps/20/schedule/Bundesliga-Scores-and-Fixtures",
+#   "https://fbref.com/en/comps/13/schedule/Ligue-1-Scores-and-Fixtures"
+# )
+# 
+# rows <- c(380, 380, 380, 306, 306)
+# 
+# league_data <- lapply(1:length(urls), function(i) get_team_id(urls[i], rows[i]))
+# team_id <- do.call(rbind, league_data)
+# team_id$hteam <- rename_teams(team_id$hteam, from = "fbref", to = "fbref_full")
 
-get_team_id <- function(url, rows) {
-  hteam <- url %>%
-    read_html() %>%
-    html_nodes(".right a") %>%
-    html_text() %>%
-    unique()
-  
-  teamid <- url %>%
-    read_html() %>%
-    html_nodes(".right a") %>%
-    html_attr("href") %>%
-    stringr::str_sub(12, 19) %>%
-    unique()
-  
-  return(data.frame(hteam, teamid))
-}
 
-urls <- c(
-  "https://fbref.com/en/comps/9/schedule/Premier-League-Scores-and-Fixtures",
-  "https://fbref.com/en/comps/11/schedule/Serie-A-Scores-and-Fixtures",
-  "https://fbref.com/en/comps/12/schedule/La-Liga-Scores-and-Fixtures",
-  "https://fbref.com/en/comps/20/schedule/Bundesliga-Scores-and-Fixtures",
-  "https://fbref.com/en/comps/13/schedule/Ligue-1-Scores-and-Fixtures"
-)
-
-rows <- c(380, 380, 380, 306, 306)
-
-league_data <- lapply(1:length(urls), function(i) get_team_id(urls[i], rows[i]))
-team_id <- do.call(rbind, league_data)
-team_id$hteam <- rename_teams(team_id$hteam, from = "fbref", to = "fbref_full")
 #saveRDS(team_id, file = "rds_files/id_teams_2023.rds")
 
 # ==============================================================================
@@ -508,8 +550,9 @@ merge_dataframes <- function(df1, df2, min_name = 3) {
   
   for(i in 1:nrow(unique_teams)){
     
-    
+    suppressMessages({
     understat_players <- get_team_players_stats(rename_teams(unique_teams[i,1], from = "fbref_full", to = "understat"),2023)
+    })
     understat_players <- understat_players[,c(1,2,4,9)]
     
     if(unique_teams[i,1] == "Barcelona") understat_players <- understat_players[!(understat_players$player_id==11471),]
@@ -526,8 +569,8 @@ merge_dataframes <- function(df1, df2, min_name = 3) {
     # If there 0 players, no need to merge
     if(nrow(understat_players) == 0 | nrow(fbref_players_subset) == 0) {
       
-      print(paste("nrow understat=",nrow(understat_players),
-                  "nrow fbref=",nrow(fbref_players_subset)))
+      # print(paste("nrow understat=",nrow(understat_players),
+      #             "nrow fbref=",nrow(fbref_players_subset)))
       print(unique_teams[i,1])
       
     } else {
@@ -543,7 +586,7 @@ merge_dataframes <- function(df1, df2, min_name = 3) {
     }
     
   }
-  
+  unique(id_players)
   
   # remove strange players
   # id_players <- id_players[-c(196,222,223),]
@@ -569,7 +612,7 @@ merge_dataframes <- function(df1, df2, min_name = 3) {
   old <- readRDS(file="rds_files/id_players_2023.rds")
   id_players <- rbind(id_players, old)
   
-  #saveRDS(id_players, file = "rds_files/id_players_2023.rds")
+  saveRDS(id_players, file = "rds_files/id_players_2023.rds")
   
 }
 

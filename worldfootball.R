@@ -277,6 +277,34 @@ rename_teams <- function(teams,from = "understat", to = "fbref") {
                          "Darmstadt", "Heidenheim")
   
   
+  # KAMBI
+  KAMBI_name <- c("Manchester City", "Arsenal", "Newcastle", "Manchester United", "Liverpool",
+                  "Brighton","Tottenham","Aston Villa", "Brentford","Fulham","Chelsea","Crystal Palace",
+                  "Wolves","Bournemouth","West Ham", "Nottingham Forest", "Everton","Leeds",
+                  "Leicester", "Southampton",
+                  "Burnley","Luton Town", "Sheffield United",
+                  
+                  "Sampdoria","AC Milan","Monza","Lecce","Fiorentina","Lazio","Spezia" ,      
+                  "Salernitana","Hellas Verona","Juventus","Torino","Udinese","Inter","Sassuolo",     #SERIE A
+                  "Empoli","Napoli","Bologna","Atalanta","Roma","Cremonese",
+                  "Frosinone", "Genoa", "Cagliari",
+                  
+                  "Osasuna","Celta Vigo","Valladolid", "FC Barcelona","Cadiz", "Valencia", "Almeria",    
+                  "Athletic Bilbao", "Getafe", "Real Betis", "Espanyol", "Sevilla", "Mallorca", "Atlético Madrid", #LA LIGA
+                  "Real Sociedad", "Elche", "Girona", "Rayo Vallecano", "Real Madrid","Villarreal",
+                  "Granada", "UD Las Palmas", "Alavés",
+                  
+                  "Lyon","Strasbourg","Clermont", "Toulouse", "Lens", "Angers" ,"Lille",      
+                  "Montpellier", "Rennes", "Marseille", "Nantes", "AS Monaco","Paris SG","Ajaccio" ,  # Ligue 1
+                  "Reims", "Auxerre","Troyes","Nice","Brest","Lorient",
+                  "Metz", "Le Havre",
+                  
+                  "Eintracht Frankfurt", "VfL Wolfsburg", "FC Augsburg", "1. FC Union Berlin", "Borussia Mönchengladbach", "VfL Bochum", "Borussia Dortmund",  
+                  "VfB Stuttgart", "1. FC Köln", "SC Freiburg", "TSG Hoffenheim", "Werder Bremen", "Bayer Leverkusen", "RB Leipzig",  # Bundes
+                  "Hertha Berlin", "Schalke 04", "Mainz 05", "Bayern Munich",
+                  "Darmstadt 98", "1. FC Heidenheim")
+  
+  
   
   if (from == "understat" & to == "fbref") {
     
@@ -306,6 +334,11 @@ rename_teams <- function(teams,from = "understat", to = "fbref") {
   } else if (from == "fbref_full" & to == "fbref") {
     
     new_teams <- lapply(teams, function(team) fbref_name[which(team == fbref_name_full)]) %>% unlist()
+    return(new_teams)
+    
+  } else if (from == "kambi" & to == "fbref") {
+    
+    new_teams <- lapply(teams, function(team) fbref_name[which(team == KAMBI_name)]) %>% unlist()
     return(new_teams)
     
   } else {

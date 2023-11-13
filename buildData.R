@@ -19,6 +19,12 @@ library(lme4)
 library(lmerTest)
 library(sjstats)
 library(lme4)
+library(RMySQL)
+library(dplyr)
+library(DBI)
+library(RSQLite)
+library(tidyr)
+library(dbplyr)
 
 
 # ==============================================================================
@@ -109,7 +115,7 @@ get_team_formation <- function(vec) {
       }else if((sum(vektor == "DMC") == 2)){
         return("3-2-4-1")
       }else if((sum(vektor == "DMC") == 1)){
-        print("3-1-4-1, GG WP")
+       
         return("3-1-4-1")
       }else{
         print("Dont know this formation")
@@ -124,7 +130,7 @@ get_team_formation <- function(vec) {
         if((sum(vektor == "FW") == 1)){
           return("4-2-3-1")
         }else {
-          print("4-2-2-2, GG WP")
+          
           return("4-2-2-2")
         }
         
@@ -138,10 +144,10 @@ get_team_formation <- function(vec) {
       }else if((sum(vektor == "DMC") == 1)){
         # 4-1-?
         if((sum(vektor == "FW") == 1)){
-          print("4-1-4-1, GG WP")
+          
           return("4-1-4-1")
         }else{
-          print("4-1-2-1-2, GG WP")
+          
           return("4-1-2-1-2")
         }
       }else if((sum(vektor == "MC") == 2) & (sum(vektor == "MR") == 1) & (sum(vektor == "ML") == 1)){
@@ -149,7 +155,7 @@ get_team_formation <- function(vec) {
         if((sum(vektor == "FW") == 2)){
           return("4-2-2")
         }else{
-          print("4-4-1-1, GG WP")
+          
           return("4-4-1-1")
         }
       }else{
@@ -180,7 +186,30 @@ id_matches_2023 <- readRDS("rds_files/id_matches_2023.rds")
 odds_2023 <- readRDS("rds_files/odds_matches_2023.rds") 
 id_teams_2023 <- readRDS("rds_files/id_teams_2023.rds") 
 
-match_id <- id_matches_2023$match_id_fbref
+
+
+
+
+# Connecting TO DATABASE =======================================================
+# Anslutningsuppgifter till databasen
+dbHost <- "localhost"
+dbPort <- 3306  # Portnummer
+dbName <- "sql_workbench"
+dbUser <- "root"
+dbPassword <- "&2;6DcH+O{jnVct"
+
+# Skapa anslutningssträng
+con <- dbConnect(MySQL(), host = dbHost, port = dbPort, dbname = dbName, user = dbUser, password = dbPassword)
+
+
+old_matches <- dbGetQuery(con, "SELECT matches.match_id FROM matches")
+id_matches_2023 <- id_matches_2023[!(id_matches_2023$match_id_fbref %in% old_matches$match_id),]
+dbDisconnect(con)
+print(paste("Adding",nrow(id_matches_2023), "matches!"))
+
+# ==============================================================================
+
+
 
 
 leagues <- c("EPL", "Serie_A", "La_liga", "Bundesliga", "Ligue_1")
@@ -194,7 +223,9 @@ missing_players <- c()
 missing <- 1
 
 
-stats_list_old <- stats_list
+
+#stats_list_old <- stats_list
+
 for(ii in 1:5){
   
   
@@ -321,7 +352,7 @@ for(ii in 1:5){
       
       understat_id <- id_players_2023[which(player.id[t] == id_players_2023[,1]),2][1]
       
-      if(length(understat_id) == 0) {
+      if(length(understat_id) == 0 | is.na(understat_id)) {
         
         understat_ids[t] <- NA
         print(paste(player[t], "not in database"))
@@ -412,7 +443,7 @@ for(ii in 1:5){
       
       understat_id <- id_players_2023[which(player.id[t] == id_players_2023[,1]),2][1]
       
-      if(length(understat_id) == 0) {
+      if(length(understat_id) == 0 | is.na(understat_id)) {
         
         understat_ids[t] <- NA
         print(paste(player[t], "not in database"))
@@ -487,12 +518,9 @@ for(ii in 1:5){
   }
 }
 
+file_name <- str_c("rds_files/stats_list_",Sys.Date(),".rds")
 
-
-saveRDS(stats_list, file = "rds_files/stats_list_2023.rds")
-
-
-
+saveRDS(stats_list, file = file_name)
 
 
 
@@ -500,6 +528,32 @@ saveRDS(stats_list, file = "rds_files/stats_list_2023.rds")
 
 
 
+
+
+
+
+
+
+
+
+
+
+# adding new players ===========================================================
+
+# id_players_2023 <- readRDS("rds_files/id_players_2023.rds")
+# id_players_2023 <- unique(id_players_2023)
+# 
+# p1 <- c("03df04ff", "375", "Odisseas Vlachodimos","Odisseas Vlachodimos", TRUE)
+# p2 <- c("aeca7743", "12113", "Jackson Tchatchoua","Jackson Tchatchoua", TRUE)
+# p3 <- c("b1b99435", "7515", "Andrei Ratiu","Andrei Ratiu", TRUE)
+# 
+# id_players_2023 <- rbind(id_players_2023,p1,p2,p3)
+
+
+#saveRDS(id_players_2023, "rds_files/id_players_2023.rds")
+
+
+# ==============================================================================
 
 
 

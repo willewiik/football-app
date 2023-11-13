@@ -9,7 +9,8 @@ library(dbplyr)
 
 
 # ==============================================================================
-stats <- readRDS(file = "rds_files/stats_list_2023.rds") 
+file_name <- str_c("rds_files/stats_list_",Sys.Date(),".rds")
+stats <- readRDS(file = file_name) 
 
 cutoff <- c()
 for(pp in 1:5) {
@@ -38,7 +39,7 @@ con <- dbConnect(MySQL(), host = dbHost, port = dbPort, dbname = dbName, user = 
 
 
 
-dbDisconnect(con)
+#dbDisconnect(con)
 
 
 
@@ -68,18 +69,21 @@ dbDisconnect(con)
   unique_teams <- unique(unique_teams)
   unique_teams <- unique_teams[!(unique_teams$team_id %in% teams$team_id),]
   
- # dbSendQuery(con, "SET GLOBAL local_infile = true;")
+  dbSendQuery(con, "SET GLOBAL local_infile = true;")
+  
+  if(nrow(unique_teams=! 0)) {
 
-  dbWriteTable(
-    con,
-    name = "teams",
-    value = unique_teams,
-    row.names = FALSE,
-    overwrite = FALSE,
-    append = TRUE,
-    allow.keywords = FALSE
-  )
-
+    dbWriteTable(
+      con,
+      name = "teams",
+      value = unique_teams,
+      row.names = FALSE,
+      overwrite = FALSE,
+      append = TRUE,
+      allow.keywords = FALSE
+    )
+    
+  }
   
   
   # TABELL MATCHES -------------------------------------------------------------
@@ -96,7 +100,7 @@ dbDisconnect(con)
                                         "a_throw_ins","a_long_balls")
   
   
-  
+  #dbSendQuery(con, "SET GLOBAL local_infile = true;")
   dbWriteTable(
     con,
     name = "matches",
@@ -127,8 +131,7 @@ dbDisconnect(con)
           players <- rbind(players, players_data)
           
         } else if ((any(players$player_id == id)) & !(players[players$player_id == id,3] == stats[[kk]][[i]][3])) {
-        #  print("Spelaren har bytt klubb")
-        #  print(stats[[kk]][[i]][[58]][[j]][2])
+       
           players[players$player_id == id,3] <- stats[[kk]][[i]][3]
           
         }
@@ -148,8 +151,7 @@ dbDisconnect(con)
           names(players_data) <- c("player_id","player_name","team_id")
           players <- rbind(players, players_data)
         } else if ((any(players$player_id == id)) & !(players[players$player_id == id,3] == stats[[kk]][[i]][4])) {
-         # print("Spelaren har bytt klubb")
-         # print(stats[[kk]][[i]][[59]][[k]][2])
+      
           
           players[players$player_id == id,3] <- stats[[kk]][[i]][4]
           
@@ -221,12 +223,7 @@ dbDisconnect(con)
                                "tackles", "npxg","xAG","xgChain","pass",
                                "yellow", "red")
   
-  # Connecting to teams table to be able to know which teams already in database
-  # matches_in_database <- dbGetQuery(con, sql("SELECT match_id FROM player_stats"))
-  # matches_in_database <- unique(matches_in_database$match_id) 
-  # matches_in_database <- data.frame("match_id" = matches_in_database)
-  
- # players_stats <- players_stats[!(players_stats$match_id %in% matches_in_database$match_id),]
+
   
   
   dbWriteTable(
@@ -242,11 +239,13 @@ dbDisconnect(con)
   
   
   dbListTables(con)
+  
+  dbDisconnect(con)
 }
 
 
 
-matt <- dbGetQuery(con, sql("SELECT * FROM matches"))
+
 
 
 
