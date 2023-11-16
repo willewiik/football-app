@@ -72,42 +72,6 @@ calculate_betting_odds <- function(X) {
 }
 
 
-get_team_stats <- function(teams, misc, shots, tackles, mat) {
-
-  if(!length(teams) == 2) stop("Teams needs to be a vector with TWO teams!")
-  
-  inner_function <- function(team, misc, shots, tackles) {
-    misc %>%
-      filter(Squad %in% c(team, str_c("vs ", team))) %>%
-      select(Team_or_Opponent, Cards, Offside, Fouls) %>%
-      full_join(
-        shots %>%
-          filter(Squad %in% c(team, str_c("vs ", team))) %>%
-          select(Team_or_Opponent, Shots, ShotsOnTarget),
-        by = 'Team_or_Opponent'
-      ) %>%
-      full_join(
-        tackles %>%
-          filter(Squad %in% c(team, str_c("vs ", team))) %>%
-          select(Team_or_Opponent, Tackles),
-        by = 'Team_or_Opponent'
-      )
-  }
-  
-  teams_stats <- lapply(teams, inner_function, misc, shots, tackles) 
-  
-  mat$HomeTeam_For <- teams_stats[[1]][1,-1] %>% unlist()
-  mat$HomeTeam_Against <- teams_stats[[1]][2,-1]  %>% unlist()
-  mat$AwayTeam_For <- teams_stats[[2]][1,-1]  %>% unlist()
-  mat$AwayTeam_Against <- teams_stats[[2]][2,-1]  %>% unlist()
-  mat$Total <- (mat$HomeTeam_For + mat$AwayTeam_Against) / 2 + 
-    (mat$AwayTeam_For + mat$HomeTeam_Against) / 2
-  
-  return(mat)
-}
-
-
-
 get_team_odds <- function(mat, num_stats) {
   
   resultat <- unlist(apply(cbind(((mat[,1]+ mat[,4])/ 2),
@@ -306,6 +270,51 @@ rename_teams <- function(teams,from = "understat", to = "fbref") {
   
   
   
+  
+  # log name
+  logo_name <- c("Manchester City","Arsenal FC","Newcastle United","Manchester United","Liverpool FC",
+                       "Brighton & Hove Albion", "Tottenham Hotspur", "Aston Villa", "Brentford FC", "Fulham FC", "Chelsea FC",
+                       "Crystal Palace", "Wolverhampton Wanderers", "AFC Bournemouth","West Ham United","Nottingham Forest",
+                       "Everton FC","Leeds United","Leicester City","Southampton FC",
+                       "Burnley FC","Luton Town", "Sheffield United",
+                       
+                       "UC Sampdoria","AC Milan","AC Monza","US Lecce","ACF Fiorentina","SS Lazio","Spezia Calcio" ,      
+                       "US Salernitana 1919","Hellas Verona","Juventus FC","Torino FC","Udinese Calcio","Inter Milan","US Sassuolo",   #SERIE A
+                       "FC Empoli","SSC Napoli","Bologna FC 1909","Atalanta BC","AS Roma","US Cremonese",
+                       "Frosinone Calcio", "Genoa CFC", "Cagliari Calcio",
+                       
+                       "CA Osasuna","Celta de Vigo","Real Valladolid CF", "FC Barcelona","Cádiz CF", "Valencia CF", "UD Almería",    
+                       "Athletic Bilbao", "Getafe CF", "Real Betis Balompié", "RCD Espanyol Barcelona", "Sevilla FC", "RCD Mallorca", "Atlético de Madrid", #LA LIGA
+                       "Real Sociedad", "Elche CF", "Girona FC", "Rayo Vallecano", "Real Madrid","Villarreal CF",
+                       "Granada CF","UD Las Palmas", "Deportivo Alavés",
+                       
+                       "Olympique Lyon","RC Strasbourg Alsace","Clermont Foot 63", "FC Toulouse", "RC Lens", "Angers SCO" ,"LOSC Lille",      
+                       "Montpellier HSC", "Stade Rennais FC", "Olympique Marseille", "FC Nantes", "AS Monaco","Paris Saint-Germain","AC Ajaccio" ,  # Ligue 1
+                       "Stade Reims", "AJ Auxerre","ESTAC Troyes","OGC Nice","Stade Brestois 29","FC Lorient",
+                       "FC Metz", "Le Havre AC",
+                       
+                       "Eintracht Frankfurt", "VfL Wolfsburg", "FC Augsburg", "1.FC Union Berlin", "Borussia Mönchengladbach", "VfL Bochum", "Borussia Dortmund",  
+                       "VfB Stuttgart", "1. FC Köln", "SC Freiburg", "TSG 1899 Hoffenheim", "SV Werder Bremen", "Bayer 04 Leverkusen", "RB Leipzig",  # Bundes
+                       "Hertha BSC", "FC Schalke 04", "1.FSV Mainz 05", "Bayern Munich",
+                       "SV Darmstadt 98", "1.FC Heidenheim 1846")
+  
+  
+  logo_local <- c()
+  logo_web <-c()
+  logo_local[1:23] <-  paste0("logos/GB1/",logo_name[1:23],".png")
+  logo_local[24:46] <- paste0("logos/GB1/",logo_name[24:46],".png")
+  logo_local[47:69] <-paste0("logos/GB1/",logo_name[47:69],".png")
+  logo_local[70:91] <- paste0("logos/GB1/",logo_name[70:91] ,".png")
+  logo_local[92:111] <- paste0("logos/GB1/", logo_name[92:111],".png")
+  
+  logo_web[18:20] <-  paste0("https://raw.githubusercontent.com/luukhopman/football-logos/master/logos/2022-23/GB1/",logo_name[18:20],".png")
+  logo_web[c(1:17,21:23)] <- paste0("https://raw.githubusercontent.com/luukhopman/football-logos/master/logos/GB1/",logo_name[c(1:17,21:23)],".png")
+  logo_web[24:46] <- paste0("https://raw.githubusercontent.com/luukhopman/football-logos/master/logos/IT1/",logo_name[24:46],".png")
+  logo_web[47:69] <- paste0("https://raw.githubusercontent.com/luukhopman/football-logos/master/logos/ES1/",logo_name[47:69],".png")
+  logo_web[70:91] <- paste0("https://raw.githubusercontent.com/luukhopman/football-logos/master/logos/FR1/",logo_name[70:91],".png")
+  logo_web[92:111] <- paste0("https://raw.githubusercontent.com/luukhopman/football-logos/master/logos/L1/",logo_name[92:111],".png")
+  
+ 
   if (from == "understat" & to == "fbref") {
     
     new_teams <- lapply(teams, function(team) fbref_name[which(team == understat_name)]) %>% unlist()
@@ -341,6 +350,16 @@ rename_teams <- function(teams,from = "understat", to = "fbref") {
     new_teams <- lapply(teams, function(team) fbref_name[which(team == KAMBI_name)]) %>% unlist()
     return(new_teams)
     
+  }else if (from == "fbref" & to == "logo_local") {
+    
+    new_teams <- lapply(teams, function(team) logo_local[which(team == fbref_name)]) %>% unlist()
+    return(new_teams)
+    
+  }else if (from == "fbref_full" & to == "logo_web") {
+    
+    new_teams <- lapply(teams, function(team) logo_web[which(team == fbref_name_full)]) %>% unlist()
+    return(new_teams)
+    
   } else {
     return(NULL)
   }
@@ -349,6 +368,10 @@ rename_teams <- function(teams,from = "understat", to = "fbref") {
 }
 
 
+
+# ==============================================================================
+# PLAYER SECTION ===============================================================
+# ==============================================================================
 sql_querys_team <- function(con, teamid, season, min_minutes ,only_show_pos_ALL = FALSE) {
   
   
@@ -393,7 +416,9 @@ sql_querys_team <- function(con, teamid, season, min_minutes ,only_show_pos_ALL 
                        season,
                        "GROUP BY p.player_name, ps.position;")
   
+  suppressWarnings({
   player_stats <- dbGetQuery(con, sql_query)
+  })
   
   player_stats <- player_stats[!is.na(player_stats$position),] # removing NA
   
@@ -438,7 +463,6 @@ sql_querys_team <- function(con, teamid, season, min_minutes ,only_show_pos_ALL 
 }
 
 
-
 sql_querys_player <- function(con, player, season) {
   
   if(length(season) == 1) {
@@ -458,7 +482,7 @@ sql_querys_player <- function(con, player, season) {
     
   }
   
-  sql_query <-  paste0("SELECT m.event_date, t1.team_name AS home_team,
+  sql_query <-  paste0("SELECT m.event_date, t1.team_name AS home_team, m.h_goals, m.a_goals,
                 t2.team_name AS away_team, ps.position, ps.minutes_played, ps.goals, ps.assists,
                 ps.shots, ps.sot, ps.tackles, ps.pass, ps.yellow, ps.red
                 FROM players AS p
@@ -468,17 +492,531 @@ sql_querys_player <- function(con, player, season) {
                 JOIN teams AS t2 ON m.away_team_id = t2.team_id
                 WHERE p.player_name = '", player, "'", season)
   
+  suppressWarnings({
   player_stats <- dbGetQuery(con, sql_query)
+  })
   player_stats <- player_stats %>% arrange(desc(event_date))
   
- 
-  colnames(player_stats) <- c("Date", "Home team", "Away team", "Position",
-                                    "MInutes played",  "Goals", "Assists", "Shots", "Sot",
-                              "Tackles", "Passes", "Yellow", "Red")
+  print(player_stats)
   
+  url_home <- rename_teams(player_stats$home_team, from = "fbref_full",to = "logo_web")
+  url_away <- rename_teams(player_stats$away_team, from = "fbref_full",to = "logo_web")
+  player_stats <- player_stats %>%  
+    mutate(
+      home_team = paste0(
+        "<img src=\"",
+        url_home,
+        "\" style=\"width: 25px; height: 33px; display: block; margin: 0 auto;\">"
+      ),
+      away_team = paste0(
+        "<img src=\"",
+        url_away,
+        "\" style=\"width: 25px; height: 33px; display: block; margin: 0 auto;\">"
+      )
+    )
+  
+  colnames(player_stats) <- c("Date", "H_team","Gh","Ga", "A_team", "Pos",
+                              "Min played",  "Goals", "Ass", "Shots", "Sot",
+                              "Tkl", "Passes", "Y", "R")
 
   return(player_stats)
   
 }
+
+
+
+# ==============================================================================
+# MATCHUP SECTION ==============================================================
+# ==============================================================================
+
+get_team_stats <- function(all_team_stats, mat, teams,
+                           season_home_team, match_location_home_team,
+                           season_away_team, match_location_away_team) {
+  
+  if(!length(teams) == 2) stop("Teams needs to be a vector with TWO teams!")
+  
+  
+  team1 <- get_one_team_specific_stats(all_team_stats, teams[1],
+                                       season_home_team, match_location_home_team)
+  team2 <- get_one_team_specific_stats(all_team_stats, teams[2],
+                                       season_away_team, match_location_away_team)
+  
+  mat[,2:3] <- team1
+  mat[,4:5] <- team2
+  mat$Total <- (mat$HomeTeam_For + mat$AwayTeam_Against) / 2 + 
+    (mat$AwayTeam_For + mat$HomeTeam_Against) / 2
+  
+  return(mat)
+}
+
+get_all_team_specific_stats <- function(con) {
+  
+
+  
+sql_query1 <-  paste0("SELECT
+    t.team_id,
+    t.team_name,
+    m.season,
+    'Home' AS match_location,
+    AVG(m.h_fouls) AS avg_fouls,
+    AVG(m.h_corners) AS avg_corners,
+    AVG(m.h_tackles) AS avg_tackles,
+    AVG(m.h_offsides) AS avg_offsides,
+    AVG(m.h_goal_kicks) AS avg_goal_kicks,
+    AVG(m.h_throw_ins) AS avg_throw_ins,
+    AVG(m.h_shots) AS avg_shots,
+    AVG(m.h_sot) AS avg_sot,
+    AVG(m.h_possession) AS avg_possession,
+    AVG(m.h_goals) AS avg_goals,
+    AVG(m.h_xg) AS avg_xg,
+    AVG(m.h_yellow) AS avg_yellow,
+    AVG(m.h_red) AS avg_red,
+    AVG(m.h_odds) AS avg_odds1x2,
+    AVG(m.o2_5odds) AS avg_oddsOver,
+    AVG(m.a_fouls) AS avg_fouls_A,
+    AVG(m.a_corners) AS avg_corners_A,
+    AVG(m.a_tackles) AS avg_tackles_A,
+    AVG(m.a_offsides) AS avg_offsides_A,
+    AVG(m.a_goal_kicks) AS avg_goal_kicks_A,
+    AVG(m.a_throw_ins) AS avg_throw_ins_A,
+    AVG(m.a_shots) AS avg_shots_A,
+    AVG(m.a_sot) AS avg_sot_A,
+    AVG(m.a_possession) AS avg_possession_A,
+    AVG(m.a_goals) AS avg_goals_A,
+    AVG(m.a_xg) AS avg_xg_A,
+    AVG(m.a_yellow) AS avg_yellow_A,
+    AVG(m.a_red) AS avg_red_A,
+    AVG(m.a_odds) AS avg_odds1x2_A,
+    AVG(m.o2_5odds) AS avg_oddsOver_A
+FROM
+    teams t
+JOIN
+    matches m ON t.team_id = m.home_team_id
+GROUP BY
+    t.team_id, t.team_name, match_location,m.season
+
+UNION
+
+SELECT
+    t.team_id,
+    t.team_name,
+    m.season,
+    'Away' AS match_location,
+    AVG(m.a_fouls) AS avg_fouls,
+    AVG(m.a_corners) AS avg_corners,
+    AVG(m.a_tackles) AS avg_tackles,
+    AVG(m.a_offsides) AS avg_offsides,
+    AVG(m.a_goal_kicks) AS avg_goal_kicks,
+    AVG(m.a_throw_ins) AS avg_throw_ins,
+    AVG(m.a_shots) AS avg_shots,
+    AVG(m.a_sot) AS avg_sot,
+    AVG(m.a_possession) AS avg_possession,
+    AVG(m.a_goals) AS avg_goals,
+    AVG(m.a_xg) AS avg_xg,
+    AVG(m.a_yellow) AS avg_yellow,
+    AVG(m.a_red) AS avg_red,
+    AVG(m.a_odds) AS avg_odds1x2,
+    AVG(m.o2_5odds) AS avg_oddsOver,
+    AVG(m.h_fouls) AS avg_fouls_A,
+    AVG(m.h_corners) AS avg_corners_A,
+    AVG(m.h_tackles) AS avg_tackles_A,
+    AVG(m.h_offsides) AS avg_offsides_A,
+    AVG(m.h_goal_kicks) AS avg_goal_kicks_A,
+    AVG(m.h_throw_ins) AS avg_throw_ins_A,
+    AVG(m.h_shots) AS avg_shots_A,
+    AVG(m.h_sot) AS avg_sot_A,
+    AVG(m.h_possession) AS avg_possession_A,
+    AVG(m.h_goals) AS avg_goals_A,
+    AVG(m.h_xg) AS avg_xg_A,
+    AVG(m.h_yellow) AS avg_yellow_A,
+    AVG(m.h_red) AS avg_red_A,
+    AVG(m.h_odds) AS avg_odds1x2_A,
+    AVG(m.o2_5odds) AS avg_oddsOver_A
+FROM
+    teams t
+JOIN
+    matches m ON t.team_id = m.away_team_id
+GROUP BY
+    t.team_id, t.team_name, match_location, m.season;
+")
+
+
+sql_query2 <-  paste0("SELECT
+    t.team_id,
+    t.team_name,
+    'All' AS season,
+    'Home' AS match_location,
+    AVG(m.h_fouls) AS avg_fouls,
+    AVG(m.h_corners) AS avg_corners,
+    AVG(m.h_tackles) AS avg_tackles,
+    AVG(m.h_offsides) AS avg_offsides,
+    AVG(m.h_goal_kicks) AS avg_goal_kicks,
+    AVG(m.h_throw_ins) AS avg_throw_ins,
+    AVG(m.h_shots) AS avg_shots,
+    AVG(m.h_sot) AS avg_sot,
+    AVG(m.h_possession) AS avg_possession,
+    AVG(m.h_goals) AS avg_goals,
+    AVG(m.h_xg) AS avg_xg,
+    AVG(m.h_yellow) AS avg_yellow,
+    AVG(m.h_red) AS avg_red,
+    AVG(m.h_odds) AS avg_odds1x2,
+    AVG(m.o2_5odds) AS avg_oddsOver,
+    AVG(m.a_fouls) AS avg_fouls_A,
+    AVG(m.a_corners) AS avg_corners_A,
+    AVG(m.a_tackles) AS avg_tackles_A,
+    AVG(m.a_offsides) AS avg_offsides_A,
+    AVG(m.a_goal_kicks) AS avg_goal_kicks_A,
+    AVG(m.a_throw_ins) AS avg_throw_ins_A,
+    AVG(m.a_shots) AS avg_shots_A,
+    AVG(m.a_sot) AS avg_sot_A,
+    AVG(m.a_possession) AS avg_possession_A,
+    AVG(m.a_goals) AS avg_goals_A,
+    AVG(m.a_xg) AS avg_xg_A,
+    AVG(m.a_yellow) AS avg_yellow_A,
+    AVG(m.a_red) AS avg_red_A,
+    AVG(m.a_odds) AS avg_odds1x2_A,
+    AVG(m.o2_5odds) AS avg_oddsOver_A
+FROM
+    teams t
+JOIN
+    matches m ON t.team_id = m.home_team_id
+GROUP BY
+    t.team_id, t.team_name, match_location
+
+UNION
+
+SELECT
+    t.team_id,
+    t.team_name,
+    'All' AS season,
+    'Away' AS match_location,
+ AVG(m.a_fouls) AS avg_fouls,
+    AVG(m.a_corners) AS avg_corners,
+    AVG(m.a_tackles) AS avg_tackles,
+    AVG(m.a_offsides) AS avg_offsides,
+    AVG(m.a_goal_kicks) AS avg_goal_kicks,
+    AVG(m.a_throw_ins) AS avg_throw_ins,
+    AVG(m.a_shots) AS avg_shots,
+    AVG(m.a_sot) AS avg_sot,
+    AVG(m.a_possession) AS avg_possession,
+    AVG(m.a_goals) AS avg_goals,
+    AVG(m.a_xg) AS avg_xg,
+    AVG(m.a_yellow) AS avg_yellow,
+    AVG(m.a_red) AS avg_red,
+    AVG(m.a_odds) AS avg_odds1x2,
+    AVG(m.o2_5odds) AS avg_oddsOver,
+    AVG(m.h_fouls) AS avg_fouls_A,
+    AVG(m.h_corners) AS avg_corners_A,
+    AVG(m.h_tackles) AS avg_tackles_A,
+    AVG(m.h_offsides) AS avg_offsides_A,
+    AVG(m.h_goal_kicks) AS avg_goal_kicks_A,
+    AVG(m.h_throw_ins) AS avg_throw_ins_A,
+    AVG(m.h_shots) AS avg_shots_A,
+    AVG(m.h_sot) AS avg_sot_A,
+    AVG(m.h_possession) AS avg_possession_A,
+    AVG(m.h_goals) AS avg_goals_A,
+    AVG(m.h_xg) AS avg_xg_A,
+    AVG(m.h_yellow) AS avg_yellow_A,
+    AVG(m.h_red) AS avg_red_A,
+    AVG(m.h_odds) AS avg_odds1x2_A,
+    AVG(m.o2_5odds) AS avg_oddsOver_A
+FROM
+    teams t
+JOIN
+    matches m ON t.team_id = m.away_team_id
+GROUP BY
+    t.team_id, t.team_name, match_location
+")
+
+  
+  
+  
+sql_query3 <-  paste0("SELECT
+    t.team_id,
+    t.team_name,
+    m.season,
+    'Both' AS match_location,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.h_fouls ELSE m.a_fouls END) AS avg_fouls,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.h_corners ELSE m.a_corners END) AS avg_corners,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.h_tackles ELSE m.a_tackles END) AS avg_tackles,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.h_offsides ELSE m.a_offsides END) AS avg_offsides,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.h_goal_kicks ELSE m.a_goal_kicks END) AS avg_goal_kicks,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.h_throw_ins ELSE m.a_throw_ins END) AS avg_throw_ins,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.h_shots ELSE m.a_shots END) AS avg_shots,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.h_sot ELSE m.a_sot END) AS avg_sot,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.h_possession ELSE m.a_possession END) AS avg_possession,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.h_goals ELSE m.a_goals END) AS avg_goals,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.h_xg ELSE m.a_xg END) AS avg_xg,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.h_yellow ELSE m.a_yellow END) AS avg_yellow,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.h_red ELSE m.a_red END) AS avg_red,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.h_odds ELSE m.a_odds END) AS avg_odds1x2,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.o2_5odds ELSE m.o2_5odds END) AS avg_oddsOver,
+    
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.a_fouls ELSE m.h_fouls END) AS avg_fouls_A,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.a_corners ELSE m.h_corners END) AS avg_corners_A,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.a_tackles ELSE m.h_tackles END) AS avg_tackles_A,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.a_offsides ELSE m.h_offsides END) AS avg_offsides_A,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.a_goal_kicks ELSE m.h_goal_kicks END) AS avg_goal_kicks_A,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.a_throw_ins ELSE m.h_throw_ins END) AS avg_throw_ins_A,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.a_shots ELSE m.h_shots END) AS avg_shots_A,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.a_sot ELSE m.h_sot END) AS avg_sot_A,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.a_possession ELSE m.h_possession END) AS avg_possession_A,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.a_goals ELSE m.h_goals END) AS avg_goals_A,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.a_xg ELSE m.h_xg END) AS avg_xg_A,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.a_yellow ELSE m.h_yellow END) AS avg_yellow_A,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.a_red ELSE m.h_red END) AS avg_red_A,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.a_odds ELSE m.h_odds END) AS avg_odds1x2_A,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.o2_5odds ELSE m.o2_5odds END) AS avg_oddsOver_A
+FROM
+    teams t
+LEFT JOIN
+    matches m ON t.team_id = m.home_team_id OR t.team_id = m.away_team_id
+GROUP BY
+    t.team_id, t.team_name, m.season;
+")
+
+
+
+
+sql_query4 <-  paste0("SELECT
+    t.team_id,
+    t.team_name,
+    'All' AS season,
+    'Both' AS match_location,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.h_fouls ELSE m.a_fouls END) AS avg_fouls,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.h_corners ELSE m.a_corners END) AS avg_corners,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.h_tackles ELSE m.a_tackles END) AS avg_tackles,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.h_offsides ELSE m.a_offsides END) AS avg_offsides,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.h_goal_kicks ELSE m.a_goal_kicks END) AS avg_goal_kicks,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.h_throw_ins ELSE m.a_throw_ins END) AS avg_throw_ins,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.h_shots ELSE m.a_shots END) AS avg_shots,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.h_sot ELSE m.a_sot END) AS avg_sot,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.h_possession ELSE m.a_possession END) AS avg_possession,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.h_goals ELSE m.a_goals END) AS avg_goals,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.h_xg ELSE m.a_xg END) AS avg_xg,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.h_yellow ELSE m.a_yellow END) AS avg_yellow,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.h_red ELSE m.a_red END) AS avg_red,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.h_odds ELSE m.a_odds END) AS avg_odds1x2,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.o2_5odds ELSE m.o2_5odds END) AS avg_oddsOver,
+    
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.a_fouls ELSE m.h_fouls END) AS avg_fouls_A,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.a_corners ELSE m.h_corners END) AS avg_corners_A,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.a_tackles ELSE m.h_tackles END) AS avg_tackles_A,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.a_offsides ELSE m.h_offsides END) AS avg_offsides_A,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.a_goal_kicks ELSE m.h_goal_kicks END) AS avg_goal_kicks_A,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.a_throw_ins ELSE m.h_throw_ins END) AS avg_throw_ins_A,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.a_shots ELSE m.h_shots END) AS avg_shots_A,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.a_sot ELSE m.h_sot END) AS avg_sot_A,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.a_possession ELSE m.h_possession END) AS avg_possession_A,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.a_goals ELSE m.h_goals END) AS avg_goals_A,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.a_xg ELSE m.h_xg END) AS avg_xg_A,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.a_yellow ELSE m.h_yellow END) AS avg_yellow_A,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.a_red ELSE m.h_red END) AS avg_red_A,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.a_odds ELSE m.h_odds END) AS avg_odds1x2_A,
+    AVG(CASE WHEN t.team_id = m.home_team_id THEN m.o2_5odds ELSE m.o2_5odds END) AS avg_oddsOver_A
+FROM
+    teams t
+LEFT JOIN
+    matches m ON t.team_id = m.home_team_id OR t.team_id = m.away_team_id
+GROUP BY
+    t.team_id, t.team_name;
+")
+  
+  suppressWarnings({
+    team_stats_1 <- dbGetQuery(con, sql_query1)
+    team_stats_2 <- dbGetQuery(con, sql_query2)
+    team_stats_3 <- dbGetQuery(con, sql_query3)
+    team_stats_4 <- dbGetQuery(con, sql_query4)
+  })
+  
+  all_team_stats <- rbind(team_stats_1,team_stats_2,team_stats_3,team_stats_4)
+  
+  return(all_team_stats)
+}
+
+
+get_one_team_specific_stats <- function(all_team_stats, team, season_string, home_away) {
+  
+  
+    if(season_string == "2022/2023") {
+      
+      season_string <- '22/23'
+      
+    } else if (season_string == "2023/2024"){
+      
+      season_string <- '2023/2024'
+      
+    } else {
+    
+      season_string <- 'All'
+      
+    }
+    print(season_string)
+  df <- all_team_stats %>%  filter(team_id == team) %>% filter(season == season_string) %>% 
+    filter(match_location == home_away) %>% select(-c(1:4))  %>% t() 
+
+
+  df <- cbind(df[1:(nrow(df)/2),],df[-(1:(nrow(df)/2)),])
+  colnames(df) <- c("For","Against")
+  rownames(df) <- c("Fouls","Corners","Tackles","Offsides","Goal kicks",
+                    "Throw ins","Shots","Shots on target","Posession","Goals",
+                    "xG","Yellow cards","Red cards","Odds 1x2","Odds Over 2.5")
+  return(df)
+}
+
+
+get_one_team_matches <- function(con, team, season_string, home_away) {
+  
+  
+  
+  if(season_string == "2022/2023") {
+    
+    season_string <- " m.season = '22/23' AND"
+    
+  } else if (season_string == "2023/2024"){
+    
+    season_string <- " m.season = '2023/2024' AND"
+    
+  } else {
+    
+    season_string <- ""
+    
+  }
+  
+
+  sql_query <- paste0("SELECT
+  m.event_date,
+  t1.team_name AS home_team,
+  m.h_goals,
+  m.a_goals,
+  t2.team_name AS away_team,
+  m.home_team_id,
+  m.away_team_id,
+  m.h_odds,
+  m.x_odds,
+  m.a_odds,
+  m.o2_5odds,
+  m.u2_5odds,
+  m.h_fouls,
+  m.h_corners,
+  m.h_tackles,
+  m.h_offsides,
+  m.h_goal_kicks,
+  m.h_throw_ins,
+  m.h_shots,
+  m.h_sot,
+  m.h_possession,
+  m.h_xg,
+  m.h_yellow,
+  m.h_red,
+  m.h_formation,
+  m.a_fouls,
+  m.a_corners,
+  m.a_tackles,
+  m.a_offsides,
+  m.a_goal_kicks,
+  m.a_throw_ins,
+  m.a_shots,
+  m.a_sot,
+  m.a_possession,
+  m.a_xg,
+  m.a_yellow,
+  m.a_red,
+  m.a_formation
+  FROM
+  matches m
+  JOIN teams AS t1 ON m.home_team_id = t1.team_id
+  JOIN teams AS t2 ON m.away_team_id = t2.team_id
+  WHERE",season_string,"
+  (m.home_team_id = '",team,"'OR m.away_team_id = '",team,"');")
+  
+  suppressWarnings({
+    matches <- dbGetQuery(con, sql_query)
+  })
+  
+  away_for_stats <- matches[matches$away_team_id == team,c(26:38)]
+  away_aga_stats <- matches[matches$away_team_id == team,c(13:25)]
+  matches[matches$away_team_id == team,c(13:25)] <- away_for_stats
+  matches[matches$away_team_id == team,c(26:38)] <- away_aga_stats
+  
+  if(home_away == "Home") {
+    
+    matches <- matches[matches$home_team_id == team,]
+    
+  } else if (home_away == "Away") {
+    
+    matches <- matches[matches$away_team_id == team,]
+    
+  } else {
+    
+  }
+  # removing id
+  matches <- matches[,-c(6:7)]
+  
+  url_home <- rename_teams(matches$home_team, from = "fbref_full",to = "logo_web")
+  url_away <- rename_teams(matches$away_team, from = "fbref_full",to = "logo_web")
+  matches <- matches %>%  
+    mutate(
+      home_team = paste0(
+        "<img src=\"",
+        url_home,
+        "\" style=\"width: 40px; height: 52px; display: block; margin: 0 auto;\">"
+      ),
+      away_team = paste0(
+        "<img src=\"",
+        url_away,
+        "\" style=\"width: 40px; height: 52px; display: block; margin: 0 auto;\">"
+      )
+    )
+  
+  colnames(matches) <- c("Date","Home","Gh","Ga","Away","1","X","2","o2.5","u2.5","fouls",
+                         "cor","tkl","off","gk","ti","s","sot","pos","xG","y","r","form",
+                         "foulsA",
+                         "corA","tklA","offA","gkA","tiA","sA","sotA","posA","xGA","yA","rA","formA")
+  
+  return(matches)
+  
+}
+
+
+
+
+# ==============================================================================
+# ODDS =========================================================================
+# ==============================================================================
+
+
+get_odds_kambi <- function(comp, category=12579,teams) {
+  
+  Sys.sleep(3)
+  url <-  str_c("https://eu-offering.kambicdn.org/offering/v2018/ub/listView/football/",
+                comp,".json?lang=en_US&market=IT&category=",category)
+  
+  res <-  GET(url, fileEncoding = "UTF-8")
+  json_file <- fromJSON(rawToChar(res$content))
+  
+  
+  home <- lapply(json_file$events, function(x){x$event$homeName})  %>% unlist() %>%
+    rename_teams(., from = "kambi", to = "fbref")
+  away <- lapply(json_file$events, function(x){x$event$awayName}) %>% unlist() %>% 
+    rename_teams(., from = "kambi", to = "fbref")
+  
+  
+  val1 <- (teams[1] == home)
+  val2 <- (teams[2] == away)
+  
+  event <- intersect(which(val1), which(val2))
+  h_odds <- json_file$events[[event]]$betOffers[[1]]$outcomes[[1]]$odds/1000
+  x_odds <- json_file$events[[event]]$betOffers[[1]]$outcomes[[2]]$odds/1000
+  a_odds <- json_file$events[[event]]$betOffers[[1]]$outcomes[[3]]$odds/1000
+  
+  return(c(h_odds,x_odds,a_odds))
+  
+  
+}
+
+
+
+
 
 

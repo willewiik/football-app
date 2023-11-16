@@ -7,8 +7,6 @@ library(stringr)
 library(dplyr)
 
 
-
-
 BTTS <- 11942
 double_chanse <- 12220
 ht <- 11927

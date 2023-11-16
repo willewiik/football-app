@@ -48,47 +48,54 @@ body {
 	background-color: var(--color-bg-primary);
 	display: flex;
 	flex-direction: column;
-	min-width: 600px;
+	min-width: 300px;
+	max-width: 700px;
 	border-radius: 10px;
 	box-shadow: 0 0 2px 0 rgba(#303030, 0.1), 0 4px 4px 0 rgba(#303030, 0.1);
 }
 
-.match-header {
-	display: flex;
-	border-bottom: 2px solid rgba(#303030, 0.1);
-	padding: 16px;
+
+
+.kjolsson {
+  
+  width: 75px;
+  
 }
 
-.match-status {
-	background-color: var(--color-bg-alert);
-	color: var(--color-text-alert);
-	padding: 8px 12px;
-	border-radius: 6px;
+
+img {
+  width: 75px;
+}
+
+
+span#hometeam_name {
+	text-align: center;
+	margin-top: 24px;
+	font-size: 20px;
 	font-weight: 600;
-	font-size: 14px;
-	display: flex;
-	align-items: center;
-	line-height: 1;
-	margin-right: auto;
-	&:before {
-		content: "";
-		display: block;
-		width: 6px;
-		height: 6px;
-		background-color: currentColor;
-		border-radius: 50%;
-		margin-right: 8px;
-	}
+}
+
+span#awayteam_name {
+	text-align: center;
+	margin-top: 24px;
+	font-size: 20px;
+	font-weight: 600;
+}
+
+
+span#date {
+	color: black;
+	font-size: 16px;
 }
 
 .match-tournament {
 	display: flex;
 	align-items: center;
 	font-weight: 600;
-	img {
-		width: 20px;
-		margin-right: 12px;
-	}
+}
+
+.match-tournament > img {
+ width: 25px;
 }
 
 .match-actions {
@@ -125,8 +132,8 @@ body {
 }
 
 .team-logo {
-	width: 100px;
-	height: 100px;
+	width: !20px;
+	height: !20px;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -135,7 +142,7 @@ body {
 	box-shadow: 0 4px 4px 0 rgba(#303030, 0.15),
 		0 0 0 15px var(--color-bg-secondary);
 	img {
-		width: 50px;
+		width: !50px;
 	}
 }
 
@@ -213,19 +220,7 @@ body {
 	padding: 4px 8px;
 }
 
-.match-bet-place {
-	position: absolute;
-	bottom: -16px;
-	left: 50%;
-	transform: translateX(-50%);
-	border: 0;
-	background-color: var(--color-theme-primary);
-	border-radius: 6px;
-	padding: 10px 48px;
-	color: rgba(#fff, 0.9);
-	font-size: 14px;
-	box-shadow: 0 4px 8px 0 rgba(#303030, 0.25);
-}
+
 
 // Codepen spesific styling - only to center the elements in the pen preview and viewport
 .container {

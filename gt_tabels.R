@@ -8,7 +8,7 @@ library(gt)
 
 get_gt_teams <- function(mat, home, away){
   
-
+    mat[,-1] <- round(mat[,-1],2)
     colnames(mat) <- c(colnames(mat)[1],
                        str_c(home,"_For"),str_c(home,"_Against"),
                        str_c(away,"_For"),str_c(away,"_Against"),
@@ -24,7 +24,7 @@ get_gt_teams <- function(mat, home, away){
     gt_result <- gt(mat, rowname_col = "Stats") %>% 
       cols_label(.list = desired_colnames) %>% 
       tab_header(
-      title = paste("Statistics for", home, "-", away, "& total")
+      title = paste("Statistics for", home, "-", away)
        )  %>%
         tab_spanner(
           label = md(str_c("**",home,"**")),
@@ -141,7 +141,6 @@ get_gt_odds_team <- function(mat, home, away){
   return(gt_result)
   
 }
-
 
 
 
