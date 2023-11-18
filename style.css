@@ -68,24 +68,18 @@ img {
 }
 
 
-span#hometeam_name {
-	text-align: center;
-	margin-top: 24px;
-	font-size: 20px;
-	font-weight: 600;
+span[id$="_hometeam_name"],
+span[id$="_awayteam_name"] {
+    text-align: center;
+    margin-top: 24px;
+    font-size: 20px;
+    font-weight: 600;
 }
 
-span#awayteam_name {
-	text-align: center;
-	margin-top: 24px;
-	font-size: 20px;
-	font-weight: 600;
-}
-
-
-span#date {
-	color: black;
-	font-size: 16px;
+/* Common styles for date */
+span[id$="_date"] {
+    color: black;
+    font-size: 16px;
 }
 
 .match-tournament {

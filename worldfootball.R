@@ -294,7 +294,7 @@ rename_teams <- function(teams,from = "understat", to = "fbref") {
                        "FC Metz", "Le Havre AC",
                        
                        "Eintracht Frankfurt", "VfL Wolfsburg", "FC Augsburg", "1.FC Union Berlin", "Borussia Mönchengladbach", "VfL Bochum", "Borussia Dortmund",  
-                       "VfB Stuttgart", "1. FC Köln", "SC Freiburg", "TSG 1899 Hoffenheim", "SV Werder Bremen", "Bayer 04 Leverkusen", "RB Leipzig",  # Bundes
+                       "VfB Stuttgart", "1.FC Köln", "SC Freiburg", "TSG 1899 Hoffenheim", "SV Werder Bremen", "Bayer 04 Leverkusen", "RB Leipzig",  # Bundes
                        "Hertha BSC", "FC Schalke 04", "1.FSV Mainz 05", "Bayern Munich",
                        "SV Darmstadt 98", "1.FC Heidenheim 1846")
   
@@ -302,17 +302,25 @@ rename_teams <- function(teams,from = "understat", to = "fbref") {
   logo_local <- c()
   logo_web <-c()
   logo_local[1:23] <-  paste0("logos/GB1/",logo_name[1:23],".png")
-  logo_local[24:46] <- paste0("logos/GB1/",logo_name[24:46],".png")
-  logo_local[47:69] <-paste0("logos/GB1/",logo_name[47:69],".png")
-  logo_local[70:91] <- paste0("logos/GB1/",logo_name[70:91] ,".png")
-  logo_local[92:111] <- paste0("logos/GB1/", logo_name[92:111],".png")
+  logo_local[24:46] <- paste0("logos/IT1/",logo_name[24:46],".png")
+  logo_local[47:69] <-paste0("logos/ES1/",logo_name[47:69],".png")
+  logo_local[70:91] <- paste0("logos/FR1/",logo_name[70:91] ,".png")
+  logo_local[92:111] <- paste0("logos/L1/", logo_name[92:111],".png")
   
   logo_web[18:20] <-  paste0("https://raw.githubusercontent.com/luukhopman/football-logos/master/logos/2022-23/GB1/",logo_name[18:20],".png")
   logo_web[c(1:17,21:23)] <- paste0("https://raw.githubusercontent.com/luukhopman/football-logos/master/logos/GB1/",logo_name[c(1:17,21:23)],".png")
+  
   logo_web[24:46] <- paste0("https://raw.githubusercontent.com/luukhopman/football-logos/master/logos/IT1/",logo_name[24:46],".png")
+  logo_web[c(24,30,43)] <- paste0("https://raw.githubusercontent.com/luukhopman/football-logos/master/logos/2022-23/IT1/",logo_name[c(24,30,43)],".png")
+  
   logo_web[47:69] <- paste0("https://raw.githubusercontent.com/luukhopman/football-logos/master/logos/ES1/",logo_name[47:69],".png")
+  logo_web[c(49,57,62)] <- paste0("https://raw.githubusercontent.com/luukhopman/football-logos/master/logos/2022-23/ES1/",logo_name[c(49,57,62)],".png")
+  
   logo_web[70:91] <- paste0("https://raw.githubusercontent.com/luukhopman/football-logos/master/logos/FR1/",logo_name[70:91],".png")
+  logo_web[c(75,83,85,86)] <- paste0("https://raw.githubusercontent.com/luukhopman/football-logos/master/logos/2022-23/FR1/",logo_name[c(75,83,85,86)],".png")
+  
   logo_web[92:111] <- paste0("https://raw.githubusercontent.com/luukhopman/football-logos/master/logos/L1/",logo_name[92:111],".png")
+  logo_web[c(106,107)] <- paste0("https://raw.githubusercontent.com/luukhopman/football-logos/master/logos/2022-23/L1/",logo_name[c(106,107)],".png")
   
  
   if (from == "understat" & to == "fbref") {
@@ -375,17 +383,14 @@ rename_teams <- function(teams,from = "understat", to = "fbref") {
 sql_querys_team <- function(con, teamid, season, min_minutes ,only_show_pos_ALL = FALSE) {
   
   
-  if(length(season) == 1) {
+  if(season == "2022/2023") {
     
-    if(season == "2022/2023") {
-      
-      season <- "AND m.season = '22/23'"
-      
-    } else {
-      
-      season <- "AND m.season = '2023/2024'"
-      
-    }
+    season <- "AND m.season = '22/23'"
+    
+  } else if(season == "2023/2024") {
+    
+    season <- "AND m.season = '2023/2024'"
+    
   } else {
     
     season <- ""
@@ -465,22 +470,21 @@ sql_querys_team <- function(con, teamid, season, min_minutes ,only_show_pos_ALL 
 
 sql_querys_player <- function(con, player, season) {
   
-  if(length(season) == 1) {
+
     
     if(season == "2022/2023") {
       
       season <- "AND m.season = '22/23';"
       
-    } else {
+    } else if(season == "2023/2024") {
       
       season <- "AND m.season = '2023/2024';"
       
+    } else {
+   
+      season <- ""
+    
     }
-  } else {
-    
-    season <- ""
-    
-  }
   
   sql_query <-  paste0("SELECT m.event_date, t1.team_name AS home_team, m.h_goals, m.a_goals,
                 t2.team_name AS away_team, ps.position, ps.minutes_played, ps.goals, ps.assists,
@@ -497,7 +501,6 @@ sql_querys_player <- function(con, player, season) {
   })
   player_stats <- player_stats %>% arrange(desc(event_date))
   
-  print(player_stats)
   
   url_home <- rename_teams(player_stats$home_team, from = "fbref_full",to = "logo_web")
   url_away <- rename_teams(player_stats$away_team, from = "fbref_full",to = "logo_web")
@@ -851,7 +854,6 @@ get_one_team_specific_stats <- function(all_team_stats, team, season_string, hom
       season_string <- 'All'
       
     }
-    print(season_string)
   df <- all_team_stats %>%  filter(team_id == team) %>% filter(season == season_string) %>% 
     filter(match_location == home_away) %>% select(-c(1:4))  %>% t() 
 
@@ -1014,6 +1016,7 @@ get_odds_kambi <- function(comp, category=12579,teams) {
   
   
 }
+
 
 
 

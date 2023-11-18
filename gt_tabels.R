@@ -108,7 +108,7 @@ get_gt_odds_team <- function(mat, home, away){
         cell_fill(color = "#FC766AFF", alpha = 0.8)
       ),
       locations = cells_body(
-        rows = c(1:3, 7:9, 13:15),
+        rows = c(1:3, 7:9, 13:15, 19:21, 25:27),
       )
     ) %>% 
     tab_style(
@@ -116,7 +116,7 @@ get_gt_odds_team <- function(mat, home, away){
         cell_fill(color = "#5B84B1FF", alpha = 0.1)
       ),
       locations = cells_body(
-        rows = c(4:6, 10:12, 16:18),
+        rows = c(4:6, 10:12, 16:18, 22:24, 28:30),
       )
     ) %>% 
     tab_style(
