@@ -36,12 +36,6 @@ dbPassword <- Sys.getenv("Key1")
 con <- dbConnect(MySQL(), host = dbHost, port = dbPort, dbname = dbName, user = dbUser, password = dbPassword)
 
 
-
-
-
-
-
-
 #dbDisconnect(con)
 
 
@@ -257,8 +251,14 @@ con <- dbConnect(MySQL(), host = dbHost, port = dbPort, dbname = dbName, user = 
 
 
 
+que <- "SELECT 
+    table_name AS `Table`,
+    ROUND((data_length + index_length) / 1024 / 1024, 2) AS `Size (MB)`
+FROM information_schema.tables
+WHERE table_schema = 'sql_workbench'
+ORDER BY (data_length + index_length) DESC;"
 
-
+hej <- dbGetQuery(con,que)
 
 
 

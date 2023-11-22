@@ -18,6 +18,7 @@ library(shinyWidgets)
 library(RJSONIO)
 library(httr)
 library(stringr)
+library(lme4)
 
 
 
@@ -88,7 +89,14 @@ ui <- fluidPage(theme = shinytheme("sandstone"),
                                                    status = "danger", fill = TRUE, inline = TRUE
                                                  ),
                                                  DTOutput("pl_away_team_matches"),
+                                                 materialSwitch(
+                                                   inputId = "pl_odds_switch_model",
+                                                   label = "Use willewiiks model to predict odds", 
+                                                   value = TRUE,
+                                                   status = "primary"
+                                                 ),
                                                  gt_output("pl_teams_odds"),
+                                                 
                                                 ),
                                                
                                         
@@ -195,6 +203,12 @@ ui <- fluidPage(theme = shinytheme("sandstone"),
                                                    status = "danger", fill = TRUE, inline = TRUE
                                                  ),
                                                  DTOutput("serie_a_away_team_matches"),
+                                                 materialSwitch(
+                                                   inputId = "serie_a_odds_switch_model",
+                                                   label = "Use willewiiks model to predict odds", 
+                                                   value = TRUE,
+                                                   status = "primary"
+                                                 ),
                                                  gt_output("serie_a_teams_odds"),
                                         ),
                                         
@@ -302,6 +316,12 @@ ui <- fluidPage(theme = shinytheme("sandstone"),
                                                    status = "danger", fill = TRUE, inline = TRUE
                                                  ),
                                                  DTOutput("la_liga_away_team_matches"),
+                                                 materialSwitch(
+                                                   inputId = "la_liga_odds_switch_model",
+                                                   label = "Use willewiiks model to predict odds", 
+                                                   value = TRUE,
+                                                   status = "primary"
+                                                 ),
                                                  gt_output("la_liga_teams_odds"),
                                         ),
                                         
@@ -409,6 +429,12 @@ ui <- fluidPage(theme = shinytheme("sandstone"),
                                                    status = "danger", fill = TRUE, inline = TRUE
                                                  ),
                                                  DTOutput("bundesliga_away_team_matches"),
+                                                 materialSwitch(
+                                                   inputId = "bundesliga_odds_switch_model",
+                                                   label = "Use willewiiks model to predict odds", 
+                                                   value = TRUE,
+                                                   status = "primary"
+                                                 ),
                                                  gt_output("bundesliga_teams_odds"),
                                         ),
                                         
@@ -516,6 +542,12 @@ ui <- fluidPage(theme = shinytheme("sandstone"),
                                                    status = "danger", fill = TRUE, inline = TRUE
                                                  ),
                                                  DTOutput("ligue_1_away_team_matches"),
+                                                 materialSwitch(
+                                                   inputId = "ligue_1_odds_switch_model",
+                                                   label = "Use willewiiks model to predict odds", 
+                                                   value = TRUE,
+                                                   status = "primary"
+                                                 ),
                                                  gt_output("ligue_1_teams_odds"),
                                         ),
                                         
@@ -668,6 +700,10 @@ server <- function(input, output, session) {
   
   
      all_team_stats <- get_all_team_specific_stats(con)
+     mod <-  models_shots_sot(con)
+     
+     models <-  mod[[1]]
+     sot_ratio <-  mod[[2]]
 
                                     
     # ==========================================================================
@@ -684,6 +720,43 @@ server <- function(input, output, session) {
     mat$Stats <- c("Fouls","Corners","Tackles","Offsides","Goal kicks",
                    "Throw ins","Shots","Shots on target","Posession","Goals",
                    "xG","Yellow cards","Red cards","Odds 1x2","Odds Over 2.5")
+    
+    
+    # ==========================================================================
+    # ODDS 1x2  ================================================================
+    get_odds <- function(league) {
+      
+      teams <- switch(league,
+                      pl = team_stats_pl(),
+                      serie_a = team_stats_serie_a(),
+                      la_liga = team_stats_la_liga(),
+                      bundesliga = team_stats_bundesliga(),
+                      ligue_1 = team_stats_ligue_1()
+      )
+      
+      if(is.null(teams)) return(NULL)
+      
+      url <- switch(league,
+                    pl = "england/premier_league",
+                    serie_a = "italy/serie_a",
+                    la_liga = "spain/la_liga",
+                    bundesliga = "germany/bundesliga",
+                    ligue_1 =  "france/ligue_1"
+      )
+      odds <- get_odds_kambi(url, 12579, teams[[1]])
+      
+      return(odds)
+    }
+    
+    odds_1x2_pl <- reactive({ get_odds("pl") })
+    odds_1x2_serie_a <- reactive({ get_odds("serie_a") })
+    odds_1x2_la_liga <- reactive({ get_odds("la_liga") })
+    odds_1x2_bundesliga <- reactive({ get_odds("bundesliga") })
+    odds_1x2_ligue_1 <- reactive({ get_odds("ligue_1") })
+    
+    
+    # ODDS 1x2  ================================================================
+    # ==========================================================================
     
     
     # ==========================================================================
@@ -824,12 +897,23 @@ server <- function(input, output, session) {
                             ligue_1 = team_stats_output_ligue_1()
       )
       
+      odds <- switch(league,
+                    pl = odds_1x2_pl(),
+                    serie_a = odds_1x2_serie_a(),
+                    la_liga = odds_1x2_la_liga(),
+                    bundesliga = odds_1x2_bundesliga(),
+                    ligue_1 = odds_1x2_ligue_1()
+      )
+      
+      switch_model <- input[[paste0(league, "_odds_switch_model")]]
+      
       rownames(teams_stats) <- teams_stats[, 1]
       rownames(teams_stats)[c(8,12)] <- c("Sot","Cards")
       teams_stats[12,-1] <- teams_stats[12,-1] + (teams_stats[13,-1]*2) # card
       teams_stats <- teams_stats[-c(9,11,13,14,15), -1]
       
-        df_team_odds <- get_team_odds(teams_stats, num_stats = 10)
+        df_team_odds <- get_team_odds(teams_stats, num_stats = 10, model = switch_model,
+                                      teams[[1]], odds, models, sot_ratio)
         return(get_gt_odds_team(df_team_odds, teams[[1]][1], teams[[1]][2]))
 
     }
@@ -1064,35 +1148,7 @@ server <- function(input, output, session) {
     logo_ligue_1 <- reactive({ get_team_logo("ligue_1") })
 
     
-    get_odds <- function(league) {
-      
-      teams <- switch(league,
-                     pl = team_stats_pl(),
-                     serie_a = team_stats_serie_a(),
-                     la_liga = team_stats_la_liga(),
-                     bundesliga = team_stats_bundesliga(),
-                     ligue_1 = team_stats_ligue_1()
-      )
-      
-      if(is.null(teams)) return(NULL)
-      
-      url <- switch(league,
-                    pl = "england/premier_league",
-                    serie_a = "italy/serie_a",
-                    la_liga = "spain/la_liga",
-                    bundesliga = "germany/bundesliga",
-                    ligue_1 =  "france/ligue_1"
-      )
-      odds <- get_odds_kambi(url, 12579, teams[[1]])
-      
-      return(odds)
-    }
     
-    odds_1x2_pl <- reactive({ get_odds("pl") })
-    odds_1x2_serie_a <- reactive({ get_odds("serie_a") })
-    odds_1x2_la_liga <- reactive({ get_odds("la_liga") })
-    odds_1x2_bundesliga <- reactive({ get_odds("bundesliga") })
-    odds_1x2_ligue_1 <- reactive({ get_odds("ligue_1") })
     
     # ======================== FUNCTION FOR OUTPUT =============================
     

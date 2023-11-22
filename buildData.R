@@ -196,7 +196,7 @@ dbHost <- "localhost"
 dbPort <- 3306  # Portnummer
 dbName <- "sql_workbench"
 dbUser <- "root"
-dbPassword <- "&2;6DcH+O{jnVct"
+dbPassword <- Sys.getenv("Key1")
 
 # Skapa anslutningssträng
 con <- dbConnect(MySQL(), host = dbHost, port = dbPort, dbname = dbName, user = dbUser, password = dbPassword)

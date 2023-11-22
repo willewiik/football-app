@@ -8,6 +8,33 @@ library(shinythemes)
 library(tidyr)
 
 
+odds_to_prob <- function(h,x,a, two = FALSE) {
+  
+  if(two) {
+    
+    total_vig_prob <- (1/h + 1/x)
+    
+    h <- 1/h / total_vig_prob
+    x <- 1/x / total_vig_prob
+    
+    return(list(h,x))
+    
+    
+  } else {
+    
+    total_vig_prob <- (1/h + 1/x +1/a)
+    
+    h <- 1/h / total_vig_prob
+    x <- 1/x / total_vig_prob
+    a <- 1/a / total_vig_prob
+    
+    return(list(h,x,a))
+    
+  }
+  
+}
+
+
 filtered_data <- function(week, df) {
   res_filtered <- df[df$Wk == week, ]
   return(res_filtered)
@@ -72,7 +99,38 @@ calculate_betting_odds <- function(X) {
 }
 
 
-get_team_odds <- function(mat, num_stats) {
+get_team_odds <- function(mat, num_stats, model = FALSE, teams, odds, models = NULL, sot_ratio) {
+  
+  if(model) {
+    
+    teams <- lapply(teams, rename_teams,from = "fbref", to = "fbref_full") %>% unlist()
+    
+    odds <- as.numeric(odds)
+    odds <- odds_to_prob(odds[1], odds[2], odds[3])
+    df <- data.frame(team = teams,opponent = rev(teams), prob_win = 
+                       c(odds[[1]]*100, odds[[3]]*100))
+    print(df)
+    pred <- predict(models,df)
+    print(pred)
+    # Home shots 
+    mat[7,c(1,4)] <- pred[1]
+    # Away shots 
+    mat[7,c(2,3)] <- pred[2]
+    # total shots
+    mat[7,5] <-  pred[1] + pred[2]
+    
+    
+    h_sot_ratio <- sot_ratio[sot_ratio$team == teams[1],4]
+    a_sot_ratio <- sot_ratio[sot_ratio$team == teams[2],4]
+    print(c(h_sot_ratio,a_sot_ratio ))
+    # Home sot
+    mat[8,c(1,4)] <- pred[1]*h_sot_ratio
+    # Away sot
+    mat[8,c(2,3)] <- pred[2]*a_sot_ratio
+    # total sot
+    mat[8,5] <-  (pred[1]*h_sot_ratio )+ (pred[2]*a_sot_ratio)
+
+  }
   
   resultat <- unlist(apply(cbind(((mat[,1]+ mat[,4])/ 2),
                                  ((mat[,2]+ mat[,3])/ 2),
@@ -1017,6 +1075,69 @@ get_odds_kambi <- function(comp, category=12579,teams) {
   
 }
 
+
+
+
+
+# ==============================================================================
+# MODELS =======================================================================
+# ==============================================================================
+
+
+
+models_shots_sot <- function(con){
+  
+  all_matches <- dbGetQuery(con,  "SELECT  * FROM matches")
+  all_teams <- dbGetQuery(con,  "SELECT  * FROM teams")
+  all_matches <- all_matches %>%  select(home_team_id, away_team_id, h_odds,
+                                         x_odds, a_odds, o2_5odds, u2_5odds,
+                                         h_shots, h_sot, a_shots, a_sot, event_date) 
+  
+  
+  probs <- odds_to_prob(all_matches$h_odds,all_matches$x_odds,all_matches$a_odds)
+  all_matches$h_prob <- probs[[1]]
+  all_matches$a_prob <- probs[[3]]
+  
+  all_matches$o2_5_prob <- odds_to_prob(all_matches$o2_5odds,
+                                        all_matches$u2_5odds, two = TRUE)[[1]]
+  
+  
+  all_matches$home_team_id <- lapply(all_matches$home_team_id,
+                                     function(x){all_teams[all_teams$team_id == x,2]}) %>% unlist()
+  all_matches$away_team_id <- lapply(all_matches$away_team_id,
+                                     function(x){all_teams[all_teams$team_id == x,2]}) %>% unlist()
+  
+  home_teams <- all_matches %>%  select(home_team_id,away_team_id, h_prob,
+                                        o2_5_prob, h_shots, h_sot,event_date)
+  away_teams <- all_matches %>%  select(away_team_id,home_team_id, a_prob,
+                                        o2_5_prob, a_shots, a_sot,event_date)
+  colnames(home_teams) <- colnames(away_teams) <- c("team","opponent","prob_win",
+                                                    "over2.5_goals_prob","shots","sot","event_date")
+  
+  
+  data_shots <- rbind(home_teams,away_teams)
+  data_shots$team <- as.factor(data_shots$team)
+  data_shots$opponent <- as.factor(data_shots$opponent)
+  data_shots$prob_win <- data_shots$prob_win * 100
+  data_shots$over2.5_goals_prob <- data_shots$over2.5_goals_prob * 100
+  data_shots$event_date_num <- as.Date(data_shots$event_date) %>%  as.numeric()
+  
+  data_shots$event_date_num <- (data_shots$event_date_num - max(data_shots$event_date_num)) * -1
+  decay_parameter <- 200
+  data_shots$weights <- exp(-(data_shots$event_date_num - max(data_shots$event_date_num))/decay_parameter)
+  
+  
+  trained_model <- lmer(shots ~ prob_win + (1 | team) + (1 | opponent),
+                        data = data_shots, weights = weights)
+  
+  grouped_data <- data_shots %>%
+    group_by(team) %>%
+    summarise(total_shots = sum(shots), total_sot = sum(sot)) %>% 
+    mutate(sot_ratio = total_sot / total_shots)
+  
+  return(list(trained_model,grouped_data))
+  
+}
 
 
 
