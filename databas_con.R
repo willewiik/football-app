@@ -26,7 +26,7 @@ for(pp in 1:5) stats[[pp]] <- stats[[pp]][1:cutoff[pp]]
 
 
 # Anslutningsuppgifter till databasen
-dbHost <- "localhost"
+dbHost <- "localhost" 
 dbPort <- 3306  # Portnummer
 dbName <- "sql_workbench"
 dbUser <- "root"
@@ -113,7 +113,10 @@ con <- dbConnect(MySQL(), host = dbHost, port = dbPort, dbname = dbName, user = 
   
   players <- data.frame(matrix(ncol = 3, nrow = 0))
   colnames(players) <- c("player_id","player_name","team_id")
-  for(kk in 1:5){
+  
+  vecc <- c(1,2,3,5) # if there are no matches in bundes etc
+  vecc <- c(1,2,4,3,5)
+  for(kk in vecc){
     for (i in 1:length(stats[[kk]])) {
       
       for (j in 1:length(stats[[kk]][[i]][[58]])) {
@@ -181,7 +184,7 @@ con <- dbConnect(MySQL(), host = dbHost, port = dbPort, dbname = dbName, user = 
   # TABELL PLAYERS_STATS ---------------------------------------------------------
   
   players_stats <- data.frame(matrix(ncol = 16, nrow = 0))
-  for(kk in 1:5){
+  for(kk in vecc){
     for (i in 1:length(stats[[kk]])) {
       
       for (j in 1:length(stats[[kk]][[i]][[58]])) {

@@ -197,21 +197,29 @@ span[id$="_date"] {
 }
 
 .match-bet-options {
-	display: flex;
-	margin-top: 8px;
-	padding-bottom: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 0px;
+  padding-bottom: 0px;
 }
 
 .match-bet-option {
-	margin-left: 4px;
-	margin-right: 4px;
-	border: 1px solid var(--color-text-icon);
-	background-color: #F9f9f9;
-	border-radius: 2px;
-	color: var(--color-text-secondary);
-	font-size: 14px;
-	font-weight: 600;
-	padding: 4px 8px;
+  flex: 1;
+  margin: 4px;
+  border: 1px solid var(--color-text-icon);
+  background-color: #f9f9f9;
+  border-radius: 2px;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.match-bet-option strong {
+  margin-bottom: 4px;
 }
 
 

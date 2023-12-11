@@ -109,7 +109,7 @@ get_team_odds <- function(mat, num_stats, model = FALSE, teams, odds, models = N
     odds <- odds_to_prob(odds[1], odds[2], odds[3])
     df <- data.frame(team = teams,opponent = rev(teams), prob_win = 
                        c(odds[[1]]*100, odds[[3]]*100))
-    print(df)
+   
     pred <- predict(models,df)
     print(pred)
     # Home shots 
@@ -129,9 +129,20 @@ get_team_odds <- function(mat, num_stats, model = FALSE, teams, odds, models = N
     mat[8,c(2,3)] <- pred[2]*a_sot_ratio
     # total sot
     mat[8,5] <-  (pred[1]*h_sot_ratio )+ (pred[2]*a_sot_ratio)
+    
+    
+    
+    
+    # OFFSIDE , 75 % viktning till agaianst 
+    # Home OFFSIDE 
+    mat[4,c(1,4)] <-  (mat[4,4] * (3/4)) + (mat[4,1] * (1/4))
+    # Away OFFSIDE 
+    mat[4,c(2,3)] <-  (mat[4,2] * (3/4)) + (mat[4,3] * (1/4))
+
+    
 
   }
-  
+ 
   resultat <- unlist(apply(cbind(((mat[,1]+ mat[,4])/ 2),
                                  ((mat[,2]+ mat[,3])/ 2),
                                    mat[,5]), 1:2, calculate_betting_odds))
@@ -160,6 +171,18 @@ get_team_odds <- function(mat, num_stats, model = FALSE, teams, odds, models = N
 }
 
 
+calculate_EV <- function(odds) {
+  
+  if(length(odds) != 4) stop("odds needs to be of length 4")
+  odds <- as.numeric(odds)
+
+    
+    EV_1 <- odds[3] / odds[1] 
+    EV_2 <- odds[4] / odds[2] 
+  return(round(max(c(EV_1,EV_2)),3))
+  
+  
+}
 
 rename_pos <- function(pos) {
   
@@ -416,7 +439,12 @@ rename_teams <- function(teams,from = "understat", to = "fbref") {
     new_teams <- lapply(teams, function(team) fbref_name[which(team == KAMBI_name)]) %>% unlist()
     return(new_teams)
     
-  }else if (from == "fbref" & to == "logo_local") {
+  } else if (from == "fbref" & to == "kambi") {
+    
+    new_teams <- lapply(teams, function(team) KAMBI_name[which(team == fbref_name)]) %>% unlist()
+    return(new_teams)
+    
+  } else if (from == "fbref" & to == "logo_local") {
     
     new_teams <- lapply(teams, function(team) logo_local[which(team == fbref_name)]) %>% unlist()
     return(new_teams)
@@ -438,6 +466,7 @@ rename_teams <- function(teams,from = "understat", to = "fbref") {
 # ==============================================================================
 # PLAYER SECTION ===============================================================
 # ==============================================================================
+
 sql_querys_team <- function(con, teamid, season, min_minutes ,only_show_pos_ALL = FALSE) {
   
   
@@ -1051,26 +1080,43 @@ get_odds_kambi <- function(comp, category=12579,teams) {
   Sys.sleep(3)
   url <-  str_c("https://eu-offering.kambicdn.org/offering/v2018/ub/listView/football/",
                 comp,".json?lang=en_US&market=IT&category=",category)
-  
+
   res <-  GET(url, fileEncoding = "UTF-8")
   json_file <- fromJSON(rawToChar(res$content))
   
-  
-  home <- lapply(json_file$events, function(x){x$event$homeName})  %>% unlist() %>%
-    rename_teams(., from = "kambi", to = "fbref")
-  away <- lapply(json_file$events, function(x){x$event$awayName}) %>% unlist() %>% 
-    rename_teams(., from = "kambi", to = "fbref")
-  
-  
-  val1 <- (teams[1] == home)
-  val2 <- (teams[2] == away)
-  
-  event <- intersect(which(val1), which(val2))
-  h_odds <- json_file$events[[event]]$betOffers[[1]]$outcomes[[1]]$odds/1000
-  x_odds <- json_file$events[[event]]$betOffers[[1]]$outcomes[[2]]$odds/1000
-  a_odds <- json_file$events[[event]]$betOffers[[1]]$outcomes[[3]]$odds/1000
-  
+ 
+  # home <-  json_file$events$event$homeName  %>% unlist() %>%
+  #   rename_teams(., from = "kambi", to = "fbref")
+  # away <-  json_file$events$event$awayName %>% unlist() %>%
+  #   rename_teams(., from = "kambi", to = "fbref")
+  # 
+  # print(home)
+  # val1 <- (teams[1] == home)
+  # val2 <- (teams[2] == away)
+  # 
+  #  event <- intersect(which(val1), which(val2))
+  #  odds <- json_file$events$betOffers[[event]]$outcomes[[1]]$odds/1000
+  # 
+  # return(odds)
+   
+   home <- lapply(json_file$events, function(x){x$event$homeName})  %>% unlist() %>%
+     rename_teams(., from = "kambi", to = "fbref")
+   away <- lapply(json_file$events, function(x){x$event$awayName}) %>% unlist() %>%
+     rename_teams(., from = "kambi", to = "fbref")
+
+
+   val1 <- (teams[1] == home)
+   val2 <- (teams[2] == away)
+
+   event <- intersect(which(val1), which(val2))
+   h_odds <- json_file$events[[event]]$betOffers[[1]]$outcomes[[1]]$odds/1000
+   x_odds <- json_file$events[[event]]$betOffers[[1]]$outcomes[[2]]$odds/1000
+   a_odds <- json_file$events[[event]]$betOffers[[1]]$outcomes[[3]]$odds/1000
+
+
+
   return(c(h_odds,x_odds,a_odds))
+
   
   
 }
@@ -1141,6 +1187,41 @@ models_shots_sot <- function(con){
 
 
 
+# ==============================================================================
+# REF ==========================================================================
+# ==============================================================================
 
 
+
+get_referee_data <- function(con) {
+  
+  sql_query  <- "SELECT
+  league_id,
+  referee,
+  COUNT(*) AS num_matches,
+  AVG(a_fouls + h_fouls) AS avg_total_fouls,
+  AVG(a_yellow + a_red + h_yellow + h_red) AS avg_total_cards
+FROM
+  matches
+GROUP BY
+  league_id, referee
+HAVING
+  num_matches >= 7;
+"
+  data <- dbGetQuery(con, sql_query)
+  colors <- brewer.pal(5, "Set2")
+  data$referee <- gsub("\u00A0", " ", trimws(data$referee))
+  data$league_name <- ifelse(data$league_id == 1, "PL",
+                             ifelse(data$league_id == 2,"Serie A",
+                                    ifelse(data$league_id == 3,"La Liga",
+                                           ifelse(data$league_id == 4,"Bundesliga",
+                                                  ifelse(data$league_id == 5,"Ligue 1","NA")))))
+  
+  data$col <- ifelse(data$league_id == 1, colors[1],
+                     ifelse(data$league_id == 2,colors[2],
+                            ifelse(data$league_id == 3,colors[3],
+                                   ifelse(data$league_id == 4,colors[4],
+                                          ifelse(data$league_id == 5,colors[5],colors[1])))))
+  return(data)
+}
 

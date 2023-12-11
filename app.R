@@ -19,7 +19,8 @@ library(RJSONIO)
 library(httr)
 library(stringr)
 library(lme4)
-
+library(plotly)
+library(RColorBrewer)
 
 
 
@@ -94,6 +95,12 @@ ui <- fluidPage(theme = shinytheme("sandstone"),
                                                    label = "Use willewiiks model to predict odds", 
                                                    value = TRUE,
                                                    status = "primary"
+                                                 ),
+                                                 actionBttn(
+                                                   inputId = "pl_show_kambi",
+                                                   label = "Show kambi odds",
+                                                   style = "pill", 
+                                                   color = "danger"
                                                  ),
                                                  gt_output("pl_teams_odds"),
                                                  
@@ -209,6 +216,12 @@ ui <- fluidPage(theme = shinytheme("sandstone"),
                                                    value = TRUE,
                                                    status = "primary"
                                                  ),
+                                                 actionBttn(
+                                                   inputId = "serie_a_show_kambi",
+                                                   label = "Show kambi odds",
+                                                   style = "pill", 
+                                                   color = "danger"
+                                                 ),
                                                  gt_output("serie_a_teams_odds"),
                                         ),
                                         
@@ -321,6 +334,12 @@ ui <- fluidPage(theme = shinytheme("sandstone"),
                                                    label = "Use willewiiks model to predict odds", 
                                                    value = TRUE,
                                                    status = "primary"
+                                                 ),
+                                                 actionBttn(
+                                                   inputId = "la_liga_show_kambi",
+                                                   label = "Show kambi odds",
+                                                   style = "pill", 
+                                                   color = "danger"
                                                  ),
                                                  gt_output("la_liga_teams_odds"),
                                         ),
@@ -435,6 +454,12 @@ ui <- fluidPage(theme = shinytheme("sandstone"),
                                                    value = TRUE,
                                                    status = "primary"
                                                  ),
+                                                 actionBttn(
+                                                   inputId = "bundesliga_show_kambi",
+                                                   label = "Show kambi odds",
+                                                   style = "pill", 
+                                                   color = "danger"
+                                                 ),
                                                  gt_output("bundesliga_teams_odds"),
                                         ),
                                         
@@ -548,6 +573,12 @@ ui <- fluidPage(theme = shinytheme("sandstone"),
                                                    value = TRUE,
                                                    status = "primary"
                                                  ),
+                                                 actionBttn(
+                                                   inputId = "ligue_1_show_kambi",
+                                                   label = "Show kambi odds",
+                                                   style = "pill", 
+                                                   color = "danger"
+                                                 ),
                                                  gt_output("ligue_1_teams_odds"),
                                         ),
                                         
@@ -594,6 +625,18 @@ ui <- fluidPage(theme = shinytheme("sandstone"),
                                                  gt_output("ligue_1_away_player_odds")),
                                       )
                                     )
+                           ),
+                           tabPanel("Referees",
+                                    mainPanel(
+                                    #  selectInput("referee_selector", "Select Referee:", choices = NULL),
+                                      multiInput(
+                                        inputId = "referee_selector",
+                                        label = "Select Referee:", 
+                                        choices = c("","")
+                                       
+                                      ),
+                                      plotlyOutput("referee_plot")
+                                    )
                            )
                 )
              
@@ -606,6 +649,7 @@ server <- function(input, output, session) {
   
   source("worldfootball.R", local = TRUE) # Functions
   source("gt_tabels.R", local = TRUE) # GT functions
+  source("selenium_code.R", local = TRUE)
   
   res <- load_match_results(country = c("ENG","ITA","ESP","GER","FRA"),
                             gender ="M",
@@ -613,6 +657,19 @@ server <- function(input, output, session) {
                             tier = "1st")
   count <- 0
   
+  
+  kambi_odds_on_pl <- reactiveVal(NULL)
+  kambi_odds_on_serie_a <- reactiveVal(NULL)
+  kambi_odds_on_la_liga <- reactiveVal(NULL)
+  kambi_odds_on_bundesliga <- reactiveVal(NULL)
+  kambi_odds_on_ligue_1 <- reactiveVal(NULL)
+  
+  
+  observeEvent(input$pl_select, {kambi_odds_on_pl(NULL)})
+  observeEvent(input$serie_a_select, {kambi_odds_on_serie_a(NULL)})
+  observeEvent(input$la_liga_select, {kambi_odds_on_la_liga(NULL)})
+  observeEvent(input$bundesliga_select, {kambi_odds_on_bundesliga(NULL)})
+  observeEvent(input$ligue_1_select, {kambi_odds_on_ligue_1(NULL)})
   
   league_table <- get_league_table(res)
   
@@ -645,6 +702,10 @@ server <- function(input, output, session) {
     ungroup()
   
   
+  # Get ref data 
+  referee_stats <- get_referee_data(con)
+  
+  
   observe({
     upc <- upc_all[upc_all$Competition_Name == "Premier League",]
   updateSelectInput(session,"pl_select",
@@ -665,8 +726,13 @@ server <- function(input, output, session) {
   upc <- upc_all[upc_all$Competition_Name == "Ligue 1",]
   updateSelectInput(session,"ligue_1_select",
                     choices = paste(upc$Date, upc$Home, "vs", upc$Away))
+  
+  #updateSelectInput(session, "referee_selector", choices = unique(referee_stats$referee))
+  updateMultiInput(session, "referee_selector", choices = unique(referee_stats$referee))
     
   })
+  
+
  
   # ============================================================================
   # ============================================================================
@@ -914,7 +980,9 @@ server <- function(input, output, session) {
       
         df_team_odds <- get_team_odds(teams_stats, num_stats = 10, model = switch_model,
                                       teams[[1]], odds, models, sot_ratio)
-        return(get_gt_odds_team(df_team_odds, teams[[1]][1], teams[[1]][2]))
+        
+        gt_obj <- get_gt_odds_team(df_team_odds, teams[[1]][1], teams[[1]][2])
+        return(list(gt_obj,df_team_odds))
 
     }
     
@@ -1049,6 +1117,7 @@ server <- function(input, output, session) {
         formatStyle(c("o2.5", "u2.5"), backgroundColor = "#a6d9aa") %>%
         formatStyle(yellow, backgroundColor = "#fbffa1", borderLeft = "solid") %>%
         formatStyle(11, borderLeft = "solid") %>%
+       # formatStyle(17, fontSize = "25px", color = "red") %>%
         formatStyle(red, backgroundColor = "#F47174", borderRight = "solid") %>%
         formatStyle("Date", backgroundColor = "#83ca89", borderRight = "0.5rem solid") %>%
         formatStyle(c(1, 6:23), fontWeight = "bold")
@@ -1293,28 +1362,93 @@ server <- function(input, output, session) {
     # ============================= ODDS GT ====================================
     
     output$pl_teams_odds <- render_gt({
-      tab_options(team_odds_output_pl(), table.width = "500px",
-                  table.font.size = 14, column_labels.font.weight = "bold")
+      if (!is.null(kambi_odds_on_pl())) {
+        tab_options(
+          get_gt_odds_team_kambi(
+            team_odds_output_pl()[[2]],
+            team_stats_pl()[[1]][1],
+            team_stats_pl()[[1]][2],
+            kambi_odds_on_pl()
+          ),
+          table.width = "500px",
+          table.font.size = 14, column_labels.font.weight = "bold"
+        )
+      } else {
+        tab_options(team_odds_output_pl()[[1]], table.width = "500px",
+                    table.font.size = 14, column_labels.font.weight = "bold")
+      }
     })
 
     output$serie_a_teams_odds <- render_gt({
-      tab_options(team_odds_output_serie_a(), table.width = "500px",
-                  table.font.size = 14, column_labels.font.weight = "bold")
+      if (!is.null(kambi_odds_on_serie_a())) {
+        tab_options(
+          get_gt_odds_team_kambi(
+            team_odds_output_serie_a()[[2]],
+            team_stats_serie_a()[[1]][1],
+            team_stats_serie_a()[[1]][2],
+            kambi_odds_on_serie_a()
+          ),
+          table.width = "500px",
+          table.font.size = 14, column_labels.font.weight = "bold"
+        )
+      } else {
+        tab_options(team_odds_output_serie_a()[[1]], table.width = "500px",
+                    table.font.size = 14, column_labels.font.weight = "bold")
+      }
     })
 
     output$la_liga_teams_odds <- render_gt({
-      tab_options(team_odds_output_la_liga(), table.width = "500px",
-                  table.font.size = 14, column_labels.font.weight = "bold")
+      if (!is.null(kambi_odds_on_la_liga())) {
+        tab_options(
+          get_gt_odds_team_kambi(
+            team_odds_output_la_liga()[[2]],
+            team_stats_la_liga()[[1]][1],
+            team_stats_la_liga()[[1]][2],
+            kambi_odds_on_la_liga()
+          ),
+          table.width = "500px",
+          table.font.size = 14, column_labels.font.weight = "bold"
+        )
+      } else {
+        tab_options(team_odds_output_la_liga()[[1]], table.width = "500px",
+                    table.font.size = 14, column_labels.font.weight = "bold")
+      }
     })
 
     output$bundesliga_teams_odds <- render_gt({
-      tab_options(team_odds_output_bundesliga(), table.width = "500px",
-                  table.font.size = 14, column_labels.font.weight = "bold")
+      if (!is.null(kambi_odds_on_bundesliga())) {
+        tab_options(
+          get_gt_odds_team_kambi(
+            team_odds_output_bundesliga()[[2]],
+            team_stats_bundesliga()[[1]][1],
+            team_stats_bundesliga()[[1]][2],
+            kambi_odds_on_bundesliga()
+          ),
+          table.width = "500px",
+          table.font.size = 14, column_labels.font.weight = "bold"
+        )
+      } else {
+        tab_options(team_odds_output_bundesliga()[[1]], table.width = "500px",
+                    table.font.size = 14, column_labels.font.weight = "bold")
+      }
     })
 
     output$ligue_1_teams_odds <- render_gt({
-      tab_options(team_odds_output_ligue_1(), table.width = "500px",
-                  table.font.size = 14, column_labels.font.weight = "bold")
+      if (!is.null(kambi_odds_on_ligue_1())) {
+        tab_options(
+          get_gt_odds_team_kambi(
+            team_odds_output_ligue_1()[[2]],
+            team_stats_ligue_1()[[1]][1],
+            team_stats_ligue_1()[[1]][2],
+            kambi_odds_on_ligue_1()
+          ),
+          table.width = "500px",
+          table.font.size = 14, column_labels.font.weight = "bold"
+        )
+      } else {
+        tab_options(team_odds_output_ligue_1()[[1]], table.width = "500px",
+                    table.font.size = 14, column_labels.font.weight = "bold")
+      }
     })
     
     # ============================= ODDS GT ====================================
@@ -1576,7 +1710,63 @@ server <- function(input, output, session) {
     })
     
     
+    # ==========================================================================
+    # ============================= Referee PLOTLY =============================
     
+    output$referee_plot <- renderPlotly({
+      
+      get_plotly_ref(referee_stats)
+      
+    })
+    
+    # ============================= Referee PLOTLY =============================
+    # ==========================================================================
+    
+    
+    
+    # ==========================================================================
+    # ============================= KAMBI ODDS =================================
+    observeEvent(input$pl_show_kambi, {
+     
+      teams <- rename_teams(team_stats_pl()[[1]],from = "fbref", to = "kambi")
+      kambi_odds_on_pl(run_selenium(teams[1], teams[2], "PL"))
+      
+    })
+    
+    observeEvent(input$serie_a_show_kambi, {
+      
+      teams <- rename_teams(team_stats_serie_a()[[1]],from = "fbref", to = "kambi")
+      kambi_odds_on_serie_a(run_selenium(teams[1], teams[2], "Serie A"))
+      
+    })
+    
+    observeEvent(input$la_liga_show_kambi, {
+      
+      teams <- rename_teams(team_stats_la_liga()[[1]],from = "fbref", to = "kambi")
+      kambi_odds_on_la_liga(run_selenium(teams[1], teams[2], "La Liga"))
+      
+    })
+    
+    observeEvent(input$bundesliga_show_kambi, {
+      
+      teams <- rename_teams(team_stats_bundesliga()[[1]],from = "fbref", to = "kambi")
+      kambi_odds_on_bundesliga(run_selenium(teams[1], teams[2], "Bundesliga"))
+      
+    })
+    
+    observeEvent(input$ligue_1_show_kambi, {
+      
+      teams <- rename_teams(team_stats_ligue_1()[[1]],from = "fbref", to = "kambi")
+      kambi_odds_on_ligue_1(run_selenium(teams[1], teams[2], "Ligue 1"))
+      
+    })
+    
+    # ============================= KAMBI ODDS =================================
+    # ==========================================================================
+
+
+    
+    # DISCONNECT FROM THE CON DATABASE
     onStop(function() {
       dbDisconnect(con)
     })
