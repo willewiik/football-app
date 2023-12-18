@@ -148,7 +148,7 @@ get_gt_odds_team <- function(mat, home, away){
 
 
 
-get_gt_odds_team_kambi <- function(mat, home, away, df_odds){
+get_gt_odds_team_kambi <- function(mat, home, away, df_odds, raw = FALSE){
   
   
     new_mat <- matrix(NA,nrow(mat),19)
@@ -165,9 +165,9 @@ get_gt_odds_team_kambi <- function(mat, home, away, df_odds){
     new_mat <- as.data.frame(new_mat)
     new_mat[,c(1:4,8:10,14:16)] <- as.data.frame(mat[,1:10])
     
-    for (i in 1:2) {
-      type <- ifelse(i == 1, "Sot", "Shots")
-      
+    
+    
+    for (type in unique(df_odds$type)) {
       for (j in 1:3) {
         col <- c(2, 8, 14)[j]
         team <- c("hteam", "ateam", "total")[j]
@@ -202,6 +202,8 @@ get_gt_odds_team_kambi <- function(mat, home, away, df_odds){
   
   # mat <- mat[19:21,]
   new_mat <- new_mat[19:24,]
+  
+  if(raw) return(new_mat)
   
   gt_result <- gt(new_mat, rowname_col = "Stats") %>% 
     cols_label(.list = desired_colnames) %>% 

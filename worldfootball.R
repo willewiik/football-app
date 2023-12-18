@@ -109,9 +109,8 @@ get_team_odds <- function(mat, num_stats, model = FALSE, teams, odds, models = N
     odds <- odds_to_prob(odds[1], odds[2], odds[3])
     df <- data.frame(team = teams,opponent = rev(teams), prob_win = 
                        c(odds[[1]]*100, odds[[3]]*100))
-   
+    
     pred <- predict(models,df)
-    print(pred)
     # Home shots 
     mat[7,c(1,4)] <- pred[1]
     # Away shots 
@@ -132,20 +131,20 @@ get_team_odds <- function(mat, num_stats, model = FALSE, teams, odds, models = N
     
     
     
-    
+
     # OFFSIDE , 75 % viktning till agaianst 
     # Home OFFSIDE 
     mat[4,c(1,4)] <-  (mat[4,4] * (3/4)) + (mat[4,1] * (1/4))
     # Away OFFSIDE 
     mat[4,c(2,3)] <-  (mat[4,2] * (3/4)) + (mat[4,3] * (1/4))
-
     
-
+    
+    
   }
- 
+  
   resultat <- unlist(apply(cbind(((mat[,1]+ mat[,4])/ 2),
                                  ((mat[,2]+ mat[,3])/ 2),
-                                   mat[,5]), 1:2, calculate_betting_odds))
+                                 mat[,5]), 1:2, calculate_betting_odds))
   
   dff <- NULL
   for (i in seq(1, length(resultat), 9)) {
@@ -175,10 +174,10 @@ calculate_EV <- function(odds) {
   
   if(length(odds) != 4) stop("odds needs to be of length 4")
   odds <- as.numeric(odds)
-
-    
-    EV_1 <- odds[3] / odds[1] 
-    EV_2 <- odds[4] / odds[2] 
+  
+  
+  EV_1 <- odds[3] / odds[1] 
+  EV_2 <- odds[4] / odds[2] 
   return(round(max(c(EV_1,EV_2)),3))
   
   
@@ -350,34 +349,59 @@ rename_teams <- function(teams,from = "understat", to = "fbref") {
                   "Darmstadt 98", "1. FC Heidenheim")
   
   
-  
+  # KAMBI
+  KAMBI_name_2 <- c("Manchester City", "Arsenal", "Newcastle United", "Manchester United", "Liverpool",
+                    "Brighton","Tottenham","Aston Villa", "Brentford","Fulham","Chelsea","Crystal Palace",
+                    "Wolves","Bournemouth","West Ham", "Nottingham", "Everton","Leeds",
+                    "Leicester", "Southampton",
+                    "Burnley","Luton Town", "Sheffield United",
+                    
+                    "Sampdoria","Milan","Monza","Lecce","Fiorentina","Lazio","Spezia" ,      
+                    "Salernitana","Hellas Verona","Juventus","Torino","Udinese","Inter","Sassuolo",     #SERIE A
+                    "Empoli","Napoli","Bologna","Atalanta","Roma","Cremonese",
+                    "Frosinone", "Genoa", "Cagliari",
+                    
+                    "Osasuna ","Celta Vigo","Valladolid", "FC Barcelona","Cadiz", "Valencia ", "Almeria",    
+                    "Athletic Bilbao", "Getafe", "Real Betis", "Espanyol", "Sevilla", "Mallorca", "Atlético Madrid", #LA LIGA
+                    "Real Sociedad", "Elche", "Girona", "Rayo Vallecano", "Real Madrid","Villarreal ",   # TYPO: VILLAREAL, VALENCIA, OSASUNA
+                    "Granada", "UD Las Palmas", "Alavés",
+                    
+                    "Lyon","Strasbourg","Clermont", "Toulouse", "Lens", "Angers" ,"Lille",      
+                    "Montpellier", "Rennes", "Marseille", "Nantes", "AS Monaco","Paris SG","Ajaccio" ,  # Ligue 1
+                    "Reims", "Auxerre","Troyes","Nice","Brest","Lorient",
+                    "Metz ", "Le Havre",
+                    
+                    "Eintracht Frankfurt", "VfL Wolfsburg", "FC Augsburg", "1. FC Union Berlin", "Borussia M'gladbach", "VfL Bochum", "Borussia Dortmund",  
+                    "Stuttgart", "1. FC Köln", "Freiburg", "TSG Hoffenheim", "Werder Bremen", "Bayer Leverkusen", "RB Leipzig",  # Bundes
+                    "Hertha Berlin", "Schalke 04", "Mainz 05", "Bayern München",
+                    "Darmstadt 98", "1. FC Heidenheim")
   
   # log name
   logo_name <- c("Manchester City","Arsenal FC","Newcastle United","Manchester United","Liverpool FC",
-                       "Brighton & Hove Albion", "Tottenham Hotspur", "Aston Villa", "Brentford FC", "Fulham FC", "Chelsea FC",
-                       "Crystal Palace", "Wolverhampton Wanderers", "AFC Bournemouth","West Ham United","Nottingham Forest",
-                       "Everton FC","Leeds United","Leicester City","Southampton FC",
-                       "Burnley FC","Luton Town", "Sheffield United",
-                       
-                       "UC Sampdoria","AC Milan","AC Monza","US Lecce","ACF Fiorentina","SS Lazio","Spezia Calcio" ,      
-                       "US Salernitana 1919","Hellas Verona","Juventus FC","Torino FC","Udinese Calcio","Inter Milan","US Sassuolo",   #SERIE A
-                       "FC Empoli","SSC Napoli","Bologna FC 1909","Atalanta BC","AS Roma","US Cremonese",
-                       "Frosinone Calcio", "Genoa CFC", "Cagliari Calcio",
-                       
-                       "CA Osasuna","Celta de Vigo","Real Valladolid CF", "FC Barcelona","Cádiz CF", "Valencia CF", "UD Almería",    
-                       "Athletic Bilbao", "Getafe CF", "Real Betis Balompié", "RCD Espanyol Barcelona", "Sevilla FC", "RCD Mallorca", "Atlético de Madrid", #LA LIGA
-                       "Real Sociedad", "Elche CF", "Girona FC", "Rayo Vallecano", "Real Madrid","Villarreal CF",
-                       "Granada CF","UD Las Palmas", "Deportivo Alavés",
-                       
-                       "Olympique Lyon","RC Strasbourg Alsace","Clermont Foot 63", "FC Toulouse", "RC Lens", "Angers SCO" ,"LOSC Lille",      
-                       "Montpellier HSC", "Stade Rennais FC", "Olympique Marseille", "FC Nantes", "AS Monaco","Paris Saint-Germain","AC Ajaccio" ,  # Ligue 1
-                       "Stade Reims", "AJ Auxerre","ESTAC Troyes","OGC Nice","Stade Brestois 29","FC Lorient",
-                       "FC Metz", "Le Havre AC",
-                       
-                       "Eintracht Frankfurt", "VfL Wolfsburg", "FC Augsburg", "1.FC Union Berlin", "Borussia Mönchengladbach", "VfL Bochum", "Borussia Dortmund",  
-                       "VfB Stuttgart", "1.FC Köln", "SC Freiburg", "TSG 1899 Hoffenheim", "SV Werder Bremen", "Bayer 04 Leverkusen", "RB Leipzig",  # Bundes
-                       "Hertha BSC", "FC Schalke 04", "1.FSV Mainz 05", "Bayern Munich",
-                       "SV Darmstadt 98", "1.FC Heidenheim 1846")
+                 "Brighton & Hove Albion", "Tottenham Hotspur", "Aston Villa", "Brentford FC", "Fulham FC", "Chelsea FC",
+                 "Crystal Palace", "Wolverhampton Wanderers", "AFC Bournemouth","West Ham United","Nottingham Forest",
+                 "Everton FC","Leeds United","Leicester City","Southampton FC",
+                 "Burnley FC","Luton Town", "Sheffield United",
+                 
+                 "UC Sampdoria","AC Milan","AC Monza","US Lecce","ACF Fiorentina","SS Lazio","Spezia Calcio" ,      
+                 "US Salernitana 1919","Hellas Verona","Juventus FC","Torino FC","Udinese Calcio","Inter Milan","US Sassuolo",   #SERIE A
+                 "FC Empoli","SSC Napoli","Bologna FC 1909","Atalanta BC","AS Roma","US Cremonese",
+                 "Frosinone Calcio", "Genoa CFC", "Cagliari Calcio",
+                 
+                 "CA Osasuna","Celta de Vigo","Real Valladolid CF", "FC Barcelona","Cádiz CF", "Valencia CF", "UD Almería",    
+                 "Athletic Bilbao", "Getafe CF", "Real Betis Balompié", "RCD Espanyol Barcelona", "Sevilla FC", "RCD Mallorca", "Atlético de Madrid", #LA LIGA
+                 "Real Sociedad", "Elche CF", "Girona FC", "Rayo Vallecano", "Real Madrid","Villarreal CF",
+                 "Granada CF","UD Las Palmas", "Deportivo Alavés",
+                 
+                 "Olympique Lyon","RC Strasbourg Alsace","Clermont Foot 63", "FC Toulouse", "RC Lens", "Angers SCO" ,"LOSC Lille",      
+                 "Montpellier HSC", "Stade Rennais FC", "Olympique Marseille", "FC Nantes", "AS Monaco","Paris Saint-Germain","AC Ajaccio" ,  # Ligue 1
+                 "Stade Reims", "AJ Auxerre","ESTAC Troyes","OGC Nice","Stade Brestois 29","FC Lorient",
+                 "FC Metz", "Le Havre AC",
+                 
+                 "Eintracht Frankfurt", "VfL Wolfsburg", "FC Augsburg", "1.FC Union Berlin", "Borussia Mönchengladbach", "VfL Bochum", "Borussia Dortmund",  
+                 "VfB Stuttgart", "1.FC Köln", "SC Freiburg", "TSG 1899 Hoffenheim", "SV Werder Bremen", "Bayer 04 Leverkusen", "RB Leipzig",  # Bundes
+                 "Hertha BSC", "FC Schalke 04", "1.FSV Mainz 05", "Bayern Munich",
+                 "SV Darmstadt 98", "1.FC Heidenheim 1846")
   
   
   logo_local <- c()
@@ -403,7 +427,7 @@ rename_teams <- function(teams,from = "understat", to = "fbref") {
   logo_web[92:111] <- paste0("https://raw.githubusercontent.com/luukhopman/football-logos/master/logos/L1/",logo_name[92:111],".png")
   logo_web[c(106,107)] <- paste0("https://raw.githubusercontent.com/luukhopman/football-logos/master/logos/2022-23/L1/",logo_name[c(106,107)],".png")
   
- 
+  
   if (from == "understat" & to == "fbref") {
     
     new_teams <- lapply(teams, function(team) fbref_name[which(team == understat_name)]) %>% unlist()
@@ -439,9 +463,19 @@ rename_teams <- function(teams,from = "understat", to = "fbref") {
     new_teams <- lapply(teams, function(team) fbref_name[which(team == KAMBI_name)]) %>% unlist()
     return(new_teams)
     
+  } else if (from == "kambi_2" & to == "fbref") {
+    
+    new_teams <- lapply(teams, function(team) fbref_name[which(team == KAMBI_name_2)]) %>% unlist()
+    return(new_teams)
+    
   } else if (from == "fbref" & to == "kambi") {
     
     new_teams <- lapply(teams, function(team) KAMBI_name[which(team == fbref_name)]) %>% unlist()
+    return(new_teams)
+    
+  } else if (from == "fbref" & to == "kambi_2") {
+    
+    new_teams <- lapply(teams, function(team) KAMBI_name_2[which(team == fbref_name)]) %>% unlist()
     return(new_teams)
     
   } else if (from == "fbref" & to == "logo_local") {
@@ -509,7 +543,7 @@ sql_querys_team <- function(con, teamid, season, min_minutes ,only_show_pos_ALL 
                        "GROUP BY p.player_name, ps.position;")
   
   suppressWarnings({
-  player_stats <- dbGetQuery(con, sql_query)
+    player_stats <- dbGetQuery(con, sql_query)
   })
   
   player_stats <- player_stats[!is.na(player_stats$position),] # removing NA
@@ -557,21 +591,21 @@ sql_querys_team <- function(con, teamid, season, min_minutes ,only_show_pos_ALL 
 
 sql_querys_player <- function(con, player, season) {
   
-
+  
+  
+  if(season == "2022/2023") {
     
-    if(season == "2022/2023") {
-      
-      season <- "AND m.season = '22/23';"
-      
-    } else if(season == "2023/2024") {
-      
-      season <- "AND m.season = '2023/2024';"
-      
-    } else {
-   
-      season <- ""
+    season <- "AND m.season = '22/23';"
     
-    }
+  } else if(season == "2023/2024") {
+    
+    season <- "AND m.season = '2023/2024';"
+    
+  } else {
+    
+    season <- ""
+    
+  }
   
   sql_query <-  paste0("SELECT m.event_date, t1.team_name AS home_team, m.h_goals, m.a_goals,
                 t2.team_name AS away_team, ps.position, ps.minutes_played, ps.goals, ps.assists,
@@ -584,7 +618,7 @@ sql_querys_player <- function(con, player, season) {
                 WHERE p.player_name = '", player, "'", season)
   
   suppressWarnings({
-  player_stats <- dbGetQuery(con, sql_query)
+    player_stats <- dbGetQuery(con, sql_query)
   })
   player_stats <- player_stats %>% arrange(desc(event_date))
   
@@ -608,7 +642,7 @@ sql_querys_player <- function(con, player, season) {
   colnames(player_stats) <- c("Date", "H_team","Gh","Ga", "A_team", "Pos",
                               "Min played",  "Goals", "Ass", "Shots", "Sot",
                               "Tkl", "Passes", "Y", "R")
-
+  
   return(player_stats)
   
 }
@@ -623,14 +657,15 @@ get_team_stats <- function(all_team_stats, mat, teams,
                            season_home_team, match_location_home_team,
                            season_away_team, match_location_away_team) {
   
+ 
   if(!length(teams) == 2) stop("Teams needs to be a vector with TWO teams!")
   
-  
+
   team1 <- get_one_team_specific_stats(all_team_stats, teams[1],
                                        season_home_team, match_location_home_team)
   team2 <- get_one_team_specific_stats(all_team_stats, teams[2],
                                        season_away_team, match_location_away_team)
-  
+
   mat[,2:3] <- team1
   mat[,4:5] <- team2
   mat$Total <- (mat$HomeTeam_For + mat$AwayTeam_Against) / 2 + 
@@ -641,9 +676,9 @@ get_team_stats <- function(all_team_stats, mat, teams,
 
 get_all_team_specific_stats <- function(con) {
   
-
   
-sql_query1 <-  paste0("SELECT
+  
+  sql_query1 <-  paste0("SELECT
     t.team_id,
     t.team_name,
     m.season,
@@ -729,9 +764,9 @@ JOIN
 GROUP BY
     t.team_id, t.team_name, match_location, m.season;
 ")
-
-
-sql_query2 <-  paste0("SELECT
+  
+  
+  sql_query2 <-  paste0("SELECT
     t.team_id,
     t.team_name,
     'All' AS season,
@@ -817,11 +852,11 @@ JOIN
 GROUP BY
     t.team_id, t.team_name, match_location
 ")
-
   
   
   
-sql_query3 <-  paste0("SELECT
+  
+  sql_query3 <-  paste0("SELECT
     t.team_id,
     t.team_name,
     m.season,
@@ -864,11 +899,11 @@ LEFT JOIN
 GROUP BY
     t.team_id, t.team_name, m.season;
 ")
-
-
-
-
-sql_query4 <-  paste0("SELECT
+  
+  
+  
+  
+  sql_query4 <-  paste0("SELECT
     t.team_id,
     t.team_name,
     'All' AS season,
@@ -928,23 +963,23 @@ GROUP BY
 get_one_team_specific_stats <- function(all_team_stats, team, season_string, home_away) {
   
   
-    if(season_string == "2022/2023") {
-      
-      season_string <- '22/23'
-      
-    } else if (season_string == "2023/2024"){
-      
-      season_string <- '2023/2024'
-      
-    } else {
+  if(season_string == "2022/2023") {
     
-      season_string <- 'All'
-      
-    }
+    season_string <- '22/23'
+    
+  } else if (season_string == "2023/2024"){
+    
+    season_string <- '2023/2024'
+    
+  } else {
+    
+    season_string <- 'All'
+    
+  }
   df <- all_team_stats %>%  filter(team_id == team) %>% filter(season == season_string) %>% 
     filter(match_location == home_away) %>% select(-c(1:4))  %>% t() 
-
-
+  
+  
   df <- cbind(df[1:(nrow(df)/2),],df[-(1:(nrow(df)/2)),])
   colnames(df) <- c("For","Against")
   rownames(df) <- c("Fouls","Corners","Tackles","Offsides","Goal kicks",
@@ -972,7 +1007,7 @@ get_one_team_matches <- function(con, team, season_string, home_away) {
     
   }
   
-
+  
   sql_query <- paste0("SELECT
   m.event_date,
   t1.team_name AS home_team,
@@ -1080,11 +1115,11 @@ get_odds_kambi <- function(comp, category=12579,teams) {
   Sys.sleep(3)
   url <-  str_c("https://eu-offering.kambicdn.org/offering/v2018/ub/listView/football/",
                 comp,".json?lang=en_US&market=IT&category=",category)
-
+  
   res <-  GET(url, fileEncoding = "UTF-8")
   json_file <- fromJSON(rawToChar(res$content))
   
- 
+  
   # home <-  json_file$events$event$homeName  %>% unlist() %>%
   #   rename_teams(., from = "kambi", to = "fbref")
   # away <-  json_file$events$event$awayName %>% unlist() %>%
@@ -1098,25 +1133,25 @@ get_odds_kambi <- function(comp, category=12579,teams) {
   #  odds <- json_file$events$betOffers[[event]]$outcomes[[1]]$odds/1000
   # 
   # return(odds)
-   
-   home <- lapply(json_file$events, function(x){x$event$homeName})  %>% unlist() %>%
-     rename_teams(., from = "kambi", to = "fbref")
-   away <- lapply(json_file$events, function(x){x$event$awayName}) %>% unlist() %>%
-     rename_teams(., from = "kambi", to = "fbref")
-
-
-   val1 <- (teams[1] == home)
-   val2 <- (teams[2] == away)
-
-   event <- intersect(which(val1), which(val2))
-   h_odds <- json_file$events[[event]]$betOffers[[1]]$outcomes[[1]]$odds/1000
-   x_odds <- json_file$events[[event]]$betOffers[[1]]$outcomes[[2]]$odds/1000
-   a_odds <- json_file$events[[event]]$betOffers[[1]]$outcomes[[3]]$odds/1000
-
-
-
+  
+  home <- lapply(json_file$events, function(x){x$event$homeName})  %>% unlist() %>%
+    rename_teams(., from = "kambi", to = "fbref")
+  away <- lapply(json_file$events, function(x){x$event$awayName}) %>% unlist() %>%
+    rename_teams(., from = "kambi", to = "fbref")
+  
+  
+  val1 <- (teams[1] == home)
+  val2 <- (teams[2] == away)
+  
+  event <- intersect(which(val1), which(val2))
+  h_odds <- json_file$events[[event]]$betOffers[[1]]$outcomes[[1]]$odds/1000
+  x_odds <- json_file$events[[event]]$betOffers[[1]]$outcomes[[2]]$odds/1000
+  a_odds <- json_file$events[[event]]$betOffers[[1]]$outcomes[[3]]$odds/1000
+  
+  
+  
   return(c(h_odds,x_odds,a_odds))
-
+  
   
   
 }

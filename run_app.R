@@ -36,29 +36,9 @@ shinyApp(ui = ui, server = server)
 
 
 
-
-
-
-# 
 # binman::list_versions("chromedriver")
 # 
 # sel_obj <- selenium(retcommand = T, check = F)
-
-
-# 
-# html_content <- remote_driver$client$getPageSource()[[1]]
-# html_parsed <- read_html(html_content)
-# 
-# teams <- html_parsed %>% html_nodes(".c539a") %>%  html_text()
-# 
-# df_matchup_kambi <- data.frame(hteam = teams[c(T,F)], ateam = teams[c(F,T)])
-# 
-# index_which_match <- 1
-# team_name_to_find <- df_matchup_kambi$hteam[index_which_match]
-
-# Use XPath to locate the div element with the specified team name
-
-
 
 
 

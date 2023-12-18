@@ -26,7 +26,7 @@ library(RColorBrewer)
 
 
 ui <- fluidPage(theme = shinytheme("sandstone"),
-                titlePanel("Football Leagues App signed by willewiik"),
+                titlePanel("Football betting EV+ app, created by @wiikwilliam"),
                 
                includeCSS("style.css"),
                 navbarPage("Home",
@@ -637,6 +637,101 @@ ui <- fluidPage(theme = shinytheme("sandstone"),
                                       ),
                                       plotlyOutput("referee_plot")
                                     )
+                           ),
+                           tabPanel("Show EV+ Bets",
+                                    mainPanel(
+                                      fluidRow(
+                                        column(3,
+                                               sliderTextInput(
+                                                 inputId = "pick_EV",
+                                                 label = "Choose minimum EV", 
+                                                 choices = c("90% +","100% +", "105% +", "110% +", "115% +", "120% +",
+                                                             "125% +", "130% +"),
+                                                 selected = "100% +"
+                                               )
+                                        ),
+                                        column(3,
+                                               awesomeCheckboxGroup(
+                                                 inputId = "EV_leagues", label = "League",
+                                                 choices = c("PL", "Serie A",
+                                                             "La Liga", "Bundesliga",
+                                                             "Ligue 1"),
+                                                 status = "danger",
+                                                 selected = c("PL", "Serie A",
+                                                              "La Liga", "Bundesliga",
+                                                              "Ligue 1")
+                                               )
+                                        ),
+                                        column(3,
+                                               awesomeCheckboxGroup(
+                                                 inputId = "EV_markets", label = "Market",
+                                                 choices = c("Sot", "Shots",
+                                                             "Offside"),
+                                                 status = "danger",
+                                                 selected = c("Sot", "Shots",
+                                                              "Offside")
+                                               )
+                                        ),
+                                      ),
+                                      
+                                      fluidRow(
+                                        column(3,
+                                               actionBttn(
+                                                 inputId = "pl_show_EV_bets",
+                                                 label = "Load EV+ Bets, Premier League",
+                                                 style = "simple", 
+                                                 size = "sm",
+                                                 color = "primary"
+                                               )
+                                        ),
+                                        
+                                        column(2,
+                                               actionBttn(
+                                                 inputId = "serie_a_show_EV_bets",
+                                                 label = "Load EV+ Bets, Serie A",
+                                                 size = "sm",
+                                                 style = "simple", 
+                                                 color = "success"
+                                               )
+                                        ),
+                                        column(2,
+                                               actionBttn(
+                                                 inputId = "la_liga_show_EV_bets",
+                                                 label = "Load EV+ Bets, La Liga",
+                                                 style = "simple", 
+                                                 size = "sm",
+                                                 color = "danger"
+                                               )
+                                        ),
+                                        column(3,
+                                               actionBttn(
+                                                 inputId = "bundesliga_show_EV_bets",
+                                                 label = "Load EV+ Bets, Bundesliga",
+                                                 style = "simple", 
+                                                 size = "sm",
+                                                 color = "royal"
+                                               ),
+                                               
+                                        ),
+                                        column(2,
+                                               actionBttn(
+                                                 inputId = "ligue_1_show_EV_bets",
+                                                 label = "Load EV+ Bets, Ligue 1",
+                                                 style = "simple", 
+                                                 size = "sm",
+                                                 color = "warning"
+                                               ),
+                                        )),
+                                      progressBar(
+                                        id = "progress_bar",
+                                        value = 0,
+                                        total = 100,
+                                        title = "",
+                                        display_pct = TRUE
+                                      ),
+                                      DTOutput("DT_EV"),
+                                     
+                                    )
                            )
                 )
              
@@ -663,6 +758,13 @@ server <- function(input, output, session) {
   kambi_odds_on_la_liga <- reactiveVal(NULL)
   kambi_odds_on_bundesliga <- reactiveVal(NULL)
   kambi_odds_on_ligue_1 <- reactiveVal(NULL)
+  
+  
+  show_EV <- reactiveVal(NULL)
+  serie_a_show_EV <- reactiveVal(NULL)
+  la_liga_show_EV <- reactiveVal(NULL)
+  bundesliga_show_EV <- reactiveVal(NULL)
+  ligue_1_show_EV <- reactiveVal(NULL)
   
   
   observeEvent(input$pl_select, {kambi_odds_on_pl(NULL)})
@@ -1728,35 +1830,35 @@ server <- function(input, output, session) {
     # ============================= KAMBI ODDS =================================
     observeEvent(input$pl_show_kambi, {
      
-      teams <- rename_teams(team_stats_pl()[[1]],from = "fbref", to = "kambi")
+      teams <- rename_teams(team_stats_pl()[[1]],from = "fbref", to = "kambi_2")
       kambi_odds_on_pl(run_selenium(teams[1], teams[2], "PL"))
       
     })
     
     observeEvent(input$serie_a_show_kambi, {
       
-      teams <- rename_teams(team_stats_serie_a()[[1]],from = "fbref", to = "kambi")
+      teams <- rename_teams(team_stats_serie_a()[[1]],from = "fbref", to = "kambi_2")
       kambi_odds_on_serie_a(run_selenium(teams[1], teams[2], "Serie A"))
       
     })
     
     observeEvent(input$la_liga_show_kambi, {
       
-      teams <- rename_teams(team_stats_la_liga()[[1]],from = "fbref", to = "kambi")
+      teams <- rename_teams(team_stats_la_liga()[[1]],from = "fbref", to = "kambi_2")
       kambi_odds_on_la_liga(run_selenium(teams[1], teams[2], "La Liga"))
       
     })
     
     observeEvent(input$bundesliga_show_kambi, {
       
-      teams <- rename_teams(team_stats_bundesliga()[[1]],from = "fbref", to = "kambi")
+      teams <- rename_teams(team_stats_bundesliga()[[1]],from = "fbref", to = "kambi_2")
       kambi_odds_on_bundesliga(run_selenium(teams[1], teams[2], "Bundesliga"))
       
     })
     
     observeEvent(input$ligue_1_show_kambi, {
       
-      teams <- rename_teams(team_stats_ligue_1()[[1]],from = "fbref", to = "kambi")
+      teams <- rename_teams(team_stats_ligue_1()[[1]],from = "fbref", to = "kambi_2")
       kambi_odds_on_ligue_1(run_selenium(teams[1], teams[2], "Ligue 1"))
       
     })
@@ -1764,13 +1866,114 @@ server <- function(input, output, session) {
     # ============================= KAMBI ODDS =================================
     # ==========================================================================
 
+    
+    # ==========================================================================
+    # ==========================================================================
+    # ============================= EV SECTION =================================
+    # ==========================================================================
+    # ==========================================================================
+    
+    
+    # ==========================================================================
+    # ============================= OUTPUT EV BETS =============================
 
+    
+    output$DT_EV <-  renderDataTable({
+      if (!is.null(show_EV())) {
+        
+        data <- show_EV()
+        data <- data[data$League %in% input$EV_leagues &
+                      data$Market %in% input$EV_markets,]
+        
+        
+        data <- data[data$EV > as.numeric(str_sub(input$pick_EV,0,-4)),]
+        
+        render_data_table(
+          data
+          )
+      } else {
+        NULL
+      }
+    })
+    
+
+    # ============================= OUTPUT EV BETS =============================
+    # ==========================================================================
+    
+    # ==========================================================================
+    # ============================= BTN SHOW EV ================================
+    
+    observeEvent(input$pl_show_EV_bets, {
+      
+      teams <- rename_teams(team_stats_pl()[[1]],from = "fbref", to = "kambi_2")
+      if(is.null(show_EV)){
+        show_EV(run_EV_bets(all_team_stats, models, sot_ratio, id_teams_2023, "PL"))
+      } else {
+        show_EV(rbind(show_EV(),run_EV_bets(all_team_stats, models, sot_ratio, id_teams_2023, "PL")))
+      }
+    })
+
+    observeEvent(input$serie_a_show_EV_bets, {
+
+      teams <- rename_teams(team_stats_serie_a()[[1]],from = "fbref", to = "kambi_2")
+      if(is.null(show_EV)){
+        show_EV(run_EV_bets(all_team_stats, models, sot_ratio, id_teams_2023, "Serie A"))
+      } else {
+        show_EV(rbind(show_EV(),run_EV_bets(all_team_stats, models, sot_ratio, id_teams_2023, "Serie A")))
+      }
+
+    })
+    
+    
+    
+
+    observeEvent(input$la_liga_show_EV_bets, {
+
+      teams <- rename_teams(team_stats_la_liga()[[1]],from = "fbref", to = "kambi_2")
+      if(is.null(show_EV)){
+        show_EV(run_EV_bets(all_team_stats, models, sot_ratio, id_teams_2023, "La Liga"))
+      } else {
+        show_EV(rbind(show_EV(),run_EV_bets(all_team_stats, models, sot_ratio, id_teams_2023, "La Liga")))
+      }
+
+    })
+
+    observeEvent(input$bundesliga_show_EV_bets, {
+
+      teams <- rename_teams(team_stats_bundesliga()[[1]],from = "fbref", to = "kambi_2")
+      if(is.null(show_EV)){
+        show_EV(run_EV_bets(all_team_stats, models, sot_ratio, id_teams_2023, "Bundesliga"))
+      } else {
+        show_EV(rbind(show_EV(),run_EV_bets(all_team_stats, models, sot_ratio, id_teams_2023, "Bundesliga")))
+      }
+
+    })
+
+    observeEvent(input$ligue_1_show_EV_bets, {
+
+      teams <- rename_teams(team_stats_ligue_1()[[1]],from = "fbref", to = "kambi_2")
+      if(is.null(show_EV)){
+        show_EV(run_EV_bets(all_team_stats, models, sot_ratio, id_teams_2023, "Ligue 1"))
+      } else {
+        show_EV(rbind(show_EV(),run_EV_bets(all_team_stats, models, sot_ratio, id_teams_2023, "Ligue 1")))
+      }
+      
+
+    })
+    
+
+    # ============================= BTN SHOW EV ================================
+    # ==========================================================================
+    
+    
     
     # DISCONNECT FROM THE CON DATABASE
     onStop(function() {
       dbDisconnect(con)
     })
 
+    
+    
 }
 # source("app.R")
 # shinyApp(ui = ui, server = server)
