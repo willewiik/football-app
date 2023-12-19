@@ -230,7 +230,7 @@ for(ii in 1:5){
   
   
   if(ii %% 1 == 0){
-    Sys.sleep(20)
+    Sys.sleep(10)
   }
   
   for(i in 1:x_matches[[ii]]){
