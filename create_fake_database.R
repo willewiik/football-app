@@ -189,3 +189,8 @@ make_fake_con <- function(){
     return(con)
     
 }
+
+
+
+source("create_fake_database.R")
+con <- make_fake_con()
