@@ -10,11 +10,23 @@ library(rvest)
 
 
 
-run_selenium <- function(hteam = "Burnley", ateam = "Manchester City", league = "PL") {
+run_selenium <- function(hteam = "Burnley", ateam = "Manchester City", league = "PL",
+                         browser = "firefox") {
   
-  remote_driver <- rsDriver(browser = "chrome",
-                            chromever = "114.0.5735.90",
-                            port = free_port())
+  
+  if(browser == "chrome") {
+    
+    remote_driver <- rsDriver(browser = "chrome",
+                              chromever = "114.0.5735.90",
+                              port = free_port())
+  } else {
+    
+    remote_driver <- rsDriver(browser = "firefox",
+                          chromever = NULL,
+                          verbose = F,
+                          port = free_port())
+  }
+
   
   
   remDrv <- remote_driver$client
@@ -257,7 +269,8 @@ run_selenium_betsson <- function(hteam = "Fulham", ateam = "Manchester City") {
 
 
 
-run_EV_bets <- function(all_team_stats, models, sot_ratio, id_teams_2023, league = "PL") {
+run_EV_bets <- function(all_team_stats, models, sot_ratio, id_teams_2023, league = "PL",
+                        browser = "firefox") {
   
   process_odds_data <- function(type, team) {
     ind <- which(over != over[1])[1] - 1
@@ -301,10 +314,18 @@ run_EV_bets <- function(all_team_stats, models, sot_ratio, id_teams_2023, league
                  "Throw ins","Shots","Shots on target","Posession","Goals",
                  "xG","Yellow cards","Red cards","Odds 1x2","Odds Over 2.5")
   
-  remote_driver <- rsDriver(browser = "chrome",
-                            chromever = "114.0.5735.90",
-                            port = free_port(),
-                            verbose = FALSE)
+  if(browser == "chrome") {
+    
+    remote_driver <- rsDriver(browser = "chrome",
+                              chromever = "114.0.5735.90",
+                              port = free_port())
+  } else {
+    
+    remote_driver <- rsDriver(browser = "firefox",
+                              chromever = NULL,
+                              verbose = F,
+                              port = free_port())
+  }
   
   
   remDrv <- remote_driver$client
@@ -365,7 +386,7 @@ run_EV_bets <- function(all_team_stats, models, sot_ratio, id_teams_2023, league
   #   range_value = c(0,nrow(df_matchup_kambi))
   # )
   
-  for(matchup in 1:nrow(df_matchup_kambi)) {
+  for(matchup in 2:nrow(df_matchup_kambi)) {
  # for(matchup in 1:2) {
     
     

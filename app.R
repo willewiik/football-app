@@ -773,14 +773,20 @@ server <- function(input, output, session) {
   observeEvent(input$bundesliga_select, {kambi_odds_on_bundesliga(NULL)})
   observeEvent(input$ligue_1_select, {kambi_odds_on_ligue_1(NULL)})
   
-  league_table <- get_league_table(res)
+ # league_table <- get_league_table(res)
   
   # DATABASE
-  dbHost <- "localhost"
+  # dbHost <- "localhost"
+  # dbPort <- 3306  # Portnummer
+  # dbName <- "sql_workbench"
+  # dbUser <- "root"
+  # dbPassword <- Sys.getenv("Key1")
+  
+  dbHost <- "127.0.0.1" 
   dbPort <- 3306  # Portnummer
-  dbName <- "sql_workbench"
+  dbName <- "newschema"
   dbUser <- "root"
-  dbPassword <- Sys.getenv("Key1")
+  dbPassword <- "pt2hGuPBwxwVRB"
   
 
   con <- dbConnect(MySQL(), host = dbHost, port = dbPort, dbname = dbName, user = dbUser, password = dbPassword)
@@ -800,7 +806,7 @@ server <- function(input, output, session) {
   upc_all <- res %>%
     filter(Date >= current_date) %>%
     group_by(Competition_Name) %>%
-    slice(1:10) %>%
+    slice(1:30) %>%
     ungroup()
   
   

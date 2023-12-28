@@ -26,11 +26,11 @@ for(pp in 1:5) stats[[pp]] <- stats[[pp]][1:cutoff[pp]]
 
 
 # Anslutningsuppgifter till databasen
-dbHost <- "localhost" 
+dbHost <- "127.0.0.1" 
 dbPort <- 3306  # Portnummer
-dbName <- "sql_workbench"
+dbName <- "newschema"
 dbUser <- "root"
-dbPassword <- Sys.getenv("Key1")
+dbPassword <- "pt2hGuPBwxwVRB"
 
 # Skapa anslutningssträng
 con <- dbConnect(MySQL(), host = dbHost, port = dbPort, dbname = dbName, user = dbUser, password = dbPassword)
@@ -263,5 +263,6 @@ ORDER BY (data_length + index_length) DESC;"
 
 hej <- dbGetQuery(con,que)
 
-
+que <- "SELECT * FROM player_stats"
+hej <- dbGetQuery(con,que)
 
